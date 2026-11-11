@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Painel Admin SV04</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#060d1c; --panel:#0b1730; --row:#0e1d3a; --line:#1d3566;
+  --fg:#e6eefc; --muted:#8fa6cf; --accent:#2f8cff; --accent-soft:#12305f;
+  --ok:#3ccf8e; --warn:#ffb547; --danger:#ff5d6c;
+  --display:"Oswald",Impact,"Arial Narrow",sans-serif;
+  --body:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto;padding-block:24px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-size:clamp(26px,5vw,38px);margin:0;letter-spacing:.02em}
+h1 span{color:var(--accent)}
+h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:.04em}
+.sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex:1 1 160px;min-width:0}
+input,textarea,select{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:9px;padding:9px 11px;font:15px var(--body);text-transform:none;letter-spacing:0;width:100%}
+textarea{resize:vertical;min-height:60px}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+input.mono{font-family:var(--mono);font-size:14px}
+.btn{font:600 14px var(--body);border-radius:10px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--row);color:var(--fg)}
+.btn:hover{border-color:var(--accent)}
+.btn.prim{background:var(--accent);border-color:var(--accent)}
+.btn.perigo{color:var(--danger);border-color:transparent;background:transparent;padding:8px 10px}
+.btn.perigo:hover{border-color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.linha{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.msg{border-radius:10px;padding:10px 12px;font-size:14px}
+.msg.erro{background:#3a1520;border:1px solid var(--danger)}
+.msg.ok{background:#0f3226;border:1px solid var(--ok)}
+.msg.info{background:var(--row);border:1px solid var(--line)}
+.abas{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.aba{font:600 14px var(--body);color:var(--muted);background:transparent;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;margin-bottom:-1px}
+.aba[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.item{background:var(--row);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.item-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.item-top b{font-family:var(--display);font-size:17px;letter-spacing:.03em}
+.item-top .acoes{display:flex;gap:4px}
+.item > label,.card > label{flex:none}
+.lista{display:flex;flex-direction:column;gap:10px}
+.dica{font-size:13px;color:var(--muted);margin:0}
+.barra{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));z-index:20}
+.barra .in{max-width:1000px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+#estado{font-size:14px;color:var(--muted)}
+#estado.sujo{color:var(--warn)}
+a{color:var(--accent)}
+details{background:var(--row);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+summary{cursor:pointer;font-weight:600}
+details ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Painel <span>Admin</span> SV04</h1>
+    <p class="sub">Área restrita para editar a tabela. <a href="./">Voltar para a tabela</a></p>
+  </header>
+
+  <!-- LOGIN -->
+  <section class="card" id="telaLogin" hidden>
+    <h2>Entrar</h2>
+    <label>E-mail<input id="lEmail" type="email" autocomplete="username" placeholder="seu e-mail"></label>
+    <label>Senha<input id="lSenha" type="password" autocomplete="current-password" placeholder="sua senha"></label>
+    <label style="flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg)">
+      <input id="lembrar" type="checkbox" style="width:auto"> Continuar conectada neste aparelho (só no seu celular ou PC)
+    </label>
+    <div class="linha"><button class="btn prim" id="entrar">Entrar</button><button class="btn" id="esqueci">Esqueci a senha</button></div>
+    <div id="msgLogin" hidden></div>
+  </section>
+
+  <!-- PRIMEIRA CONFIGURAÇÃO / RECUPERAR SENHA -->
+  <section class="card" id="telaConfig" hidden>
+    <h2 id="cfgTitulo">Primeira configuração</h2>
+    <p class="dica" id="cfgTexto">Faça isso uma vez só. Você vai criar o seu e-mail e senha de acesso ao painel. Para isso, precisa da <b>chave do GitHub</b> (veja como conseguir logo abaixo).</p>
+    <label>Chave do GitHub<input id="cChave" type="password" autocomplete="off" placeholder="github_pat_..."></label>
+    <label>E-mail para entrar<input id="cEmail" type="email" autocomplete="username" placeholder="seu e-mail"></label>
+    <div class="linha">
+      <label>Senha (mínimo 8 caracteres)<input id="cSenha" type="password" autocomplete="new-password"></label>
+      <label>Repita a senha<input id="cSenha2" type="password" autocomplete="new-password"></label>
+    </div>
+    <div class="linha"><button class="btn prim" id="criar">Criar acesso</button><button class="btn" id="voltarLogin" hidden>Voltar</button></div>
+    <div id="msgConfig" hidden></div>
+    <details>
+      <summary>Como conseguir a chave do GitHub</summary>
+      <ol>
+        <li>Entre no GitHub com a conta da tabela.</li>
+        <li>Abra <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+        <li>Em <b>Token name</b>, escreva <code>painel-sv04</code>. Em <b>Expiration</b>, escolha o prazo mais longo.</li>
+        <li>Em <b>Repository access</b>, marque <b>Only select repositories</b> e escolha <b>tabela-sv04</b>.</li>
+        <li>Em <b>Permissions → Repository permissions → Contents</b>, escolha <b>Read and write</b>.</li>
+        <li>Clique em <b>Generate token</b>, copie a chave e cole aqui. Guarde num lugar seguro: ela serve para recuperar a senha.</li>
+      </ol>
+    </details>
+  </section>
+
+  <!-- EDITOR -->
+  <section id="telaEditor" hidden>
+    <div class="card" style="margin-bottom:18px">
+      <div class="linha" style="justify-content:space-between;align-items:center">
+        <p class="dica" style="margin:0">Edite os campos e toque em <b>Salvar no site</b>. Depois de salvar, o site atualiza em 1 a 2 minutos.</p>
+        <div class="linha"><button class="btn" id="abrirTroca">Trocar senha</button><button class="btn" id="sair">Sair</button></div>
+      </div>
+      <div id="painelTroca" class="linha" hidden>
+        <label>Senha nova (mínimo 8)<input id="tSenha" type="password" autocomplete="new-password"></label>
+        <label>Repita a senha nova<input id="tSenha2" type="password" autocomplete="new-password"></label>
+        <button class="btn prim" id="trocar">Salvar senha nova</button>
+      </div>
+      <div id="msgTroca" hidden></div>
+    </div>
+    <nav class="abas" id="abas" role="tablist"></nav>
+    <div id="conteudo" style="margin-top:16px"></div>
+  </section>
+  <footer style="color:var(--muted);font-size:13px;text-align:center">Criado por Admin Amora</footer>
+</div>
+
+<div class="barra" id="barra" hidden>
+  <div class="in">
+    <span id="estado">Nenhuma mudança</span>
+    <div class="linha">
+      <button class="btn" id="desfazer" disabled>Desfazer tudo</button>
+      <button class="btn prim" id="salvar" disabled>Salvar no site</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO = "amoraadm0-bot/tabela-sv04", ARQ = "dados.js", API = `https://api.github.com/repos/${REPO}/contents/${ARQ}`;
+let EMAIL = "", TOKEN = "", SHA = "", D = null, ORIGINAL = "", abaAtual = 0;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const curto = n => String(n || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
+const guardar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} };
+const ler = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+
+function aviso(el, tipo, html) { el.className = "msg " + tipo; el.innerHTML = html; el.hidden = false; }
+const b64dec = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g, "")), c => c.charCodeAt(0)));
+const b64enc = s => { const by = new TextEncoder().encode(s); let bin = ""; for (let i = 0; i < by.length; i += 8192) bin += String.fromCharCode.apply(null, by.subarray(i, i + 8192)); return btoa(bin); };
+
+async function gh(url, opt = {}) {
+  const r = await fetch(url, { ...opt, headers: { "Authorization": "Bearer " + TOKEN, "Accept": "application/vnd.github+json", ...(opt.headers || {}) } });
+  if (!r.ok) { const e = new Error(r.status); e.status = r.status; try { e.body = await r.json(); } catch (_) {} throw e; }
+  return r.json();
+}
+
+const ACESSO = `https://api.github.com/repos/${REPO}/contents/acesso.json`;
+const b64b = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const bb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function chaveCripto(email, senha, salt) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(senha + "\n" + email.trim().toLowerCase()), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 250000 }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function trancar(token, email, senha) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const k = await chaveCripto(email, senha, salt);
+  const dados = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, k, new TextEncoder().encode(token));
+  return { v: 1, salt: b64b(salt), iv: b64b(iv), dados: b64b(dados) };
+}
+async function destrancar(a, email, senha) {
+  const k = await chaveCripto(email, senha, bb64(a.salt));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: bb64(a.iv) }, k, bb64(a.dados)));
+}
+async function lerAcesso() {
+  const r = await fetch(`https://raw.githubusercontent.com/${REPO}/main/acesso.json?t=` + Date.now(), { cache: "no-store" });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error("rede");
+  return r.json();
+}
+async function shaAcesso() { try { return (await gh(ACESSO + "?t=" + Date.now())).sha; } catch (e) { if (e.status === 404) return undefined; throw e; } }
+async function gravarAcesso(obj, msgCommit) {
+  const sha = await shaAcesso();
+  await gh(ACESSO, { method: "PUT", body: JSON.stringify({ message: msgCommit, content: b64enc(JSON.stringify(obj, null, 2) + "\n"), ...(sha ? { sha } : {}) }) });
+}
+async function validarToken() {
+  const repo = await gh(`https://api.github.com/repos/${REPO}`);
+  if (!repo.permissions || !repo.permissions.push) throw Object.assign(new Error("perm"), { status: 403 });
+}
+const erroToken = e => e.status === 401 ? "Chave do GitHub inválida ou vencida. Gere uma nova." :
+  e.status === 403 || e.status === 404 ? "Essa chave não tem permissão. Confira se escolheu <b>tabela-sv04</b> e <b>Contents: Read and write</b>." :
+  "Não consegui conectar ao GitHub. Confira a internet e tente de novo.";
+
+function mostrarTela(t) {
+  $("telaLogin").hidden = t !== "login"; $("telaConfig").hidden = t !== "config";
+  $("telaEditor").hidden = t !== "editor"; $("barra").hidden = t !== "editor";
+}
+async function abrirEditor() { await carregar(); mostrarTela("editor"); }
+
+async function entrar() {
+  const msg = $("msgLogin"), email = $("lEmail").value, senha = $("lSenha").value;
+  if (!email.trim() || !senha) return aviso(msg, "erro", "Preencha o e-mail e a senha.");
+  aviso(msg, "info", "Entrando...");
+  try {
+    const a = await lerAcesso();
+    if (!a) { mostrarTela("config"); return; }
+    try { TOKEN = await destrancar(a, email, senha); } catch (_) { TOKEN = ""; return aviso(msg, "erro", "E-mail ou senha incorretos."); }
+    await validarToken();
+    if ($("lembrar").checked) guardar("sv04_sessao", TOKEN);
+    EMAIL = email; msg.hidden = true; $("lSenha").value = "";
+    await abrirEditor();
+  } catch (e) { TOKEN = ""; aviso(msg, "erro", e.status ? erroToken(e) + " Use “Esqueci a senha” para cadastrar uma chave nova." : "Não consegui conectar. Confira a internet e tente de novo."); }
+}
+
+async function criarAcesso() {
+  const msg = $("msgConfig"), chave = $("cChave").value.trim(), email = $("cEmail").value.trim(), s1 = $("cSenha").value, s2 = $("cSenha2").value;
+  if (!chave || !email) return aviso(msg, "erro", "Preencha a chave do GitHub e o e-mail.");
+  if (s1.length < 8) return aviso(msg, "erro", "A senha precisa ter pelo menos 8 caracteres.");
+  if (s1 !== s2) return aviso(msg, "erro", "As duas senhas não estão iguais.");
+  aviso(msg, "info", "Criando acesso...");
+  TOKEN = chave;
+  try {
+    await validarToken();
+    await gravarAcesso(await trancar(chave, email, s1), "Acesso do painel atualizado");
+    EMAIL = email; ["cChave", "cSenha", "cSenha2"].forEach(id => $(id).value = "");
+    aviso(msg, "ok", "Acesso criado!");
+    await abrirEditor();
+  } catch (e) { TOKEN = ""; aviso(msg, "erro", erroToken(e)); }
+}
+
+async function trocarSenha() {
+  const msg = $("msgTroca"), s1 = $("tSenha").value, s2 = $("tSenha2").value;
+  if (!EMAIL) return aviso(msg, "erro", "Para trocar a senha, saia e entre de novo com e-mail e senha.");
+  if (s1.length < 8) return aviso(msg, "erro", "A senha precisa ter pelo menos 8 caracteres.");
+  if (s1 !== s2) return aviso(msg, "erro", "As duas senhas não estão iguais.");
+  aviso(msg, "info", "Salvando senha nova...");
+  try {
+    await gravarAcesso(await trancar(TOKEN, EMAIL, s1), "Senha do painel trocada");
+    $("tSenha").value = $("tSenha2").value = ""; $("painelTroca").hidden = true;
+    aviso(msg, "ok", "Senha trocada! Use a senha nova na próxima vez.");
+  } catch (e) { aviso(msg, "erro", erroToken(e)); }
+}
+
+async function carregar() {
+  const f = await gh(API + "?t=" + Date.now());
+  SHA = f.sha;
+  const codigo = b64dec(f.content);
+  const r = new Function(codigo + `
+    ;return { SECOES, APOIO: typeof APOIO!=="undefined"?APOIO:[], AVISOS: typeof AVISOS!=="undefined"?AVISOS:[],
+      SIG: typeof SIGNIFICADOS!=="undefined"?SIGNIFICADOS:{}, PCH: typeof PALAVRAS_CHAVE!=="undefined"?PALAVRAS_CHAVE:{} };`)();
+  D = JSON.parse(JSON.stringify(r));
+  ORIGINAL = JSON.stringify(D);
+  desenhar(); sujo();
+}
+
+/* ---------- desenho do editor ---------- */
+function abas() {
+  const nomes = [...D.SECOES.map(s => s.titulo), "Comandos de apoio", "Avisos"];
+  $("abas").innerHTML = nomes.map((n, i) => `<button class="aba" role="tab" data-i="${i}" aria-selected="${i === abaAtual}">${esc(n)}</button>`).join("");
+}
+function campo(rot, val, attrs, mono) {
+  return `<label>${rot}<input ${attrs} value="${esc(val)}"${mono ? ' class="mono"' : ""}></label>`;
+}
+function desenhar() {
+  abas();
+  const c = $("conteudo"), nS = D.SECOES.length;
+  if (abaAtual < nS) {
+    const s = D.SECOES[abaAtual];
+    c.innerHTML = `
+      <div class="card" style="margin-bottom:14px">
+        <h2>${esc(s.titulo)}</h2>
+        <div class="linha">${campo("Título", s.titulo, `data-s="titulo"`)}${campo("Subtítulo", s.subtitulo, `data-s="subtitulo"`)}${campo("Nome da coluna de tempo", s.coluna, `data-s="coluna"`)}</div>
+        <label>Explicação embaixo do título<textarea data-s="explicacao">${esc(s.explicacao)}</textarea></label>
+        <label>Aviso em destaque (deixe vazio se não tiver)<textarea data-s="aviso">${esc(s.aviso)}</textarea></label>
+        <p class="dica">Pode usar &lt;b&gt;texto&lt;/b&gt; para deixar em negrito.</p>
+      </div>
+      <div class="lista">${s.linhas.map((r, i) => {
+        const k = curto(r.infracao);
+        return `<div class="item" data-i="${i}">
+          <div class="item-top"><b>${esc(r.infracao || "Nova infração")}</b>
+            <div class="acoes">
+              <button class="btn" data-acao="subir" title="Mover para cima" aria-label="Mover para cima">↑</button>
+              <button class="btn" data-acao="descer" title="Mover para baixo" aria-label="Mover para baixo">↓</button>
+              <button class="btn perigo" data-acao="apagar">Apagar</button>
+            </div></div>
+          <div class="linha">
+            ${campo("Infração / sigla", r.infracao, `data-f="infracao"`)}
+            ${campo("Código", r.codigo, `data-f="codigo" style="max-width:110px"`, true)}
+            ${campo(esc(s.coluna || "Punição"), r.punicao, `data-f="punicao"`)}
+            ${campo("Comando (vazio = pedir a um superior)", r.comando, `data-f="comando"`, true)}
+          </div>
+          ${campo("Significado (aparece ao tocar na sigla)", D.SIG[k] || D.SIG[r.infracao] || "", `data-m="SIG"`)}
+          ${campo("Palavras-chave para o preenchimento automático", D.PCH[r.infracao] || D.PCH[k] || "", `data-m="PCH"`)}
+        </div>`; }).join("")}
+      </div>
+      <div class="linha" style="margin-top:14px"><button class="btn prim" data-acao="nova">+ Adicionar infração</button></div>`;
+  } else if (abaAtual === nS) {
+    c.innerHTML = `<div class="lista">${D.APOIO.map((a, i) => `<div class="item" data-i="${i}">
+        <div class="item-top"><b>${esc(a.para || "Novo comando")}</b><div class="acoes"><button class="btn perigo" data-acao="apagar">Apagar</button></div></div>
+        <div class="linha">${campo("Para quê", a.para, `data-a="para"`)}${campo("Comando", a.comando, `data-a="comando"`, true)}</div>
+      </div>`).join("")}</div>
+      <div class="linha" style="margin-top:14px"><button class="btn prim" data-acao="nova">+ Adicionar comando</button></div>`;
+  } else {
+    c.innerHTML = `<div class="lista">${D.AVISOS.map((a, i) => `<div class="item" data-i="${i}">
+        <div class="item-top"><b>Aviso ${i + 1}</b><div class="acoes"><button class="btn perigo" data-acao="apagar">Apagar</button></div></div>
+        <label>Cor<select data-v="cor"><option value="amarelo"${a.cor !== "vermelho" ? " selected" : ""}>Amarelo</option><option value="vermelho"${a.cor === "vermelho" ? " selected" : ""}>Vermelho</option></select></label>
+        <label>Texto<textarea data-v="texto">${esc(a.texto)}</textarea></label>
+      </div>`).join("")}</div>
+      <div class="linha" style="margin-top:14px"><button class="btn prim" data-acao="nova">+ Adicionar aviso</button></div>`;
+  }
+}
+
+/* ---------- edição ---------- */
+$("abas").addEventListener("click", e => { const b = e.target.closest(".aba"); if (!b) return; abaAtual = +b.dataset.i; desenhar(); window.scrollTo(0, 0); });
+
+$("conteudo").addEventListener("input", e => {
+  const t = e.target, item = t.closest(".item"), i = item ? +item.dataset.i : -1, nS = D.SECOES.length;
+  if (abaAtual < nS) {
+    const s = D.SECOES[abaAtual];
+    if (t.dataset.s) { s[t.dataset.s] = t.value; if (t.dataset.s === "titulo") abas(); }
+    else if (t.dataset.f) {
+      const r = s.linhas[i], antigo = curto(r.infracao);
+      r[t.dataset.f] = t.value;
+      if (t.dataset.f === "infracao") {
+        item.querySelector(".item-top b").textContent = t.value || "Nova infração";
+        const novo = curto(t.value);
+        ["SIG", "PCH"].forEach(m => { const inp = item.querySelector(`[data-m="${m}"]`); if (inp.value) D[m][novo] = inp.value; });
+        if (antigo !== novo && !usado(antigo)) { delete D.SIG[antigo]; delete D.PCH[antigo]; }
+      }
+    } else if (t.dataset.m) {
+      const k = curto(s.linhas[i].infracao); if (!k) return;
+      if (t.value.trim()) D[t.dataset.m][k] = t.value; else delete D[t.dataset.m][k];
+      if (t.dataset.m === "PCH") delete D.PCH[s.linhas[i].infracao !== k ? s.linhas[i].infracao : "\u0000"];
+    }
+  } else if (abaAtual === nS) { D.APOIO[i][t.dataset.a] = t.value; item.querySelector(".item-top b").textContent = D.APOIO[i].para || "Novo comando"; }
+  else { D.AVISOS[i][t.dataset.v] = t.value; }
+  sujo();
+});
+$("conteudo").addEventListener("change", e => { if (e.target.dataset.v) { D.AVISOS[+e.target.closest(".item").dataset.i][e.target.dataset.v] = e.target.value; sujo(); } });
+
+function usado(k) { return D.SECOES.some(s => s.linhas.some(r => curto(r.infracao) === k)); }
+
+let apagarPendente = null;
+$("conteudo").addEventListener("click", e => {
+  const b = e.target.closest("[data-acao]"); if (!b) return;
+  const item = b.closest(".item"), i = item ? +item.dataset.i : -1, nS = D.SECOES.length;
+  const lista = abaAtual < nS ? D.SECOES[abaAtual].linhas : abaAtual === nS ? D.APOIO : D.AVISOS;
+  const a = b.dataset.acao;
+  if (a === "apagar") {
+    if (apagarPendente !== b) { apagarPendente = b; b.textContent = "Confirmar?"; setTimeout(() => { if (apagarPendente === b) { apagarPendente = null; b.textContent = "Apagar"; } }, 3000); return; }
+    apagarPendente = null; lista.splice(i, 1);
+  } else if (a === "subir" && i > 0) { [lista[i - 1], lista[i]] = [lista[i], lista[i - 1]]; }
+  else if (a === "descer" && i < lista.length - 1) { [lista[i + 1], lista[i]] = [lista[i], lista[i + 1]]; }
+  else if (a === "nova") {
+    if (abaAtual < nS) { const pad = (lista[0] || {}).comando || ""; lista.push({ infracao: "", codigo: "", punicao: "", comando: pad }); }
+    else if (abaAtual === nS) lista.push({ para: "", comando: "" });
+    else lista.push({ cor: "amarelo", texto: "" });
+  } else return;
+  desenhar(); sujo();
+  if (a === "nova") { const its = $("conteudo").querySelectorAll(".item"); const ult = its[its.length - 1]; ult.scrollIntoView({ block: "center" }); const f = ult.querySelector("input,textarea"); f && f.focus(); }
+});
+
+function sujo() {
+  const mudou = JSON.stringify(D) !== ORIGINAL;
+  $("estado").textContent = mudou ? "Há mudanças não salvas" : "Nenhuma mudança";
+  $("estado").className = mudou ? "sujo" : "";
+  $("salvar").disabled = !mudou; $("desfazer").disabled = !mudou;
+}
+$("desfazer").addEventListener("click", () => { D = JSON.parse(ORIGINAL); desenhar(); sujo(); });
+window.addEventListener("beforeunload", e => { if (D && JSON.stringify(D) !== ORIGINAL) { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------- gerar o dados.js ---------- */
+const J = s => JSON.stringify(String(s ?? ""));
+function gerar() {
+  const usados = new Set(D.SECOES.flatMap(s => s.linhas.map(r => curto(r.infracao))));
+  const limpa = m => Object.fromEntries(Object.entries(m).filter(([k, v]) => v && (usados.has(k) || usados.has(curto(k)))));
+  const sig = limpa(D.SIG), pch = limpa(D.PCH);
+  return `/* =====================================================================
+   TABELA SV04 — ARQUIVO DE DADOS
+   ---------------------------------------------------------------------
+   O jeito mais fácil de editar é pelo Painel Admin (admin.html).
+   Se editar por aqui: troque só o texto entre aspas e não apague
+   vírgulas, aspas, colchetes [ ] nem chaves { }.
+   ===================================================================== */
+
+const SECOES = [
+${D.SECOES.map(s => `  {
+    id: ${J(s.id)},
+    titulo: ${J(s.titulo)},
+    subtitulo: ${J(s.subtitulo)},
+    coluna: ${J(s.coluna)},
+    explicacao: ${J(s.explicacao)},
+    aviso: ${J(s.aviso)},
+    linhas: [
+${s.linhas.filter(r => r.infracao.trim()).map(r => `      { infracao: ${J(r.infracao.trim())}, codigo: ${J(r.codigo.trim())}, punicao: ${J(r.punicao.trim())}, comando: ${J(r.comando.trim())} },`).join("\n")}
+    ],
+  },`).join("\n\n")}
+];
+
+/* Comandos de apoio (retirar punição e verificar) */
+const APOIO = [
+${D.APOIO.filter(a => a.para.trim() || a.comando.trim()).map(a => `  { para: ${J(a.para.trim())}, comando: ${J(a.comando.trim())} },`).join("\n")}
+];
+
+/* Avisos do rodapé */
+const AVISOS = [
+${D.AVISOS.filter(a => a.texto.trim()).map(a => `  { cor: ${J(a.cor)}, texto: ${J(a.texto.trim())} },`).join("\n")}
+];
+
+/* Significado das siglas (um só para cada sigla) */
+const SIGNIFICADOS = {
+${Object.entries(sig).map(([k, v]) => `  ${J(k)}: ${J(v)},`).join("\n")}
+};
+
+/* Palavras-chave do preenchimento automático ("O que aconteceu?") */
+const PALAVRAS_CHAVE = {
+${Object.entries(pch).map(([k, v]) => `  ${J(k)}: ${J(v)},`).join("\n")}
+};
+`;
+}
+
+$("salvar").addEventListener("click", async () => {
+  const b = $("salvar"); b.disabled = true; b.textContent = "Salvando...";
+  const est = $("estado");
+  try {
+    const r = await gh(API, { method: "PUT", body: JSON.stringify({ message: "Atualização pelo Painel Admin", content: b64enc(gerar()), sha: SHA }) });
+    SHA = r.content.sha; ORIGINAL = JSON.stringify(D);
+    sujo(); est.textContent = "Salvo! O site atualiza em 1 a 2 minutos."; est.className = "";
+  } catch (e) {
+    est.className = "sujo";
+    est.textContent = e.status === 409 ? "A tabela mudou em outro lugar. Toque em Sair, entre de novo e refaça a mudança." :
+      e.status === 401 ? "Sua chave venceu. Saia e entre com uma chave nova." : "Não consegui salvar. Confira a internet e tente de novo.";
+    b.disabled = false;
+  }
+  b.textContent = "Salvar no site";
+});
+
+$("entrar").addEventListener("click", entrar);
+$("lSenha").addEventListener("keydown", e => { if (e.key === "Enter") entrar(); });
+$("criar").addEventListener("click", criarAcesso);
+$("esqueci").addEventListener("click", () => {
+  $("cfgTitulo").textContent = "Recuperar acesso";
+  $("cfgTexto").innerHTML = "Cole a <b>chave do GitHub</b> e crie um e-mail e uma senha novos. A senha antiga deixa de funcionar.";
+  $("voltarLogin").hidden = false; mostrarTela("config");
+});
+$("voltarLogin").addEventListener("click", () => mostrarTela("login"));
+$("abrirTroca").addEventListener("click", () => { $("painelTroca").hidden = !$("painelTroca").hidden; $("msgTroca").hidden = true; });
+$("trocar").addEventListener("click", trocarSenha);
+$("sair").addEventListener("click", () => {
+  if (D && JSON.stringify(D) !== ORIGINAL && $("sair").textContent !== "Sair sem salvar?") { $("sair").textContent = "Sair sem salvar?"; setTimeout(() => $("sair").textContent = "Sair", 3000); return; }
+  guardar("sv04_sessao", null); TOKEN = ""; EMAIL = ""; D = null; ORIGINAL = "";
+  $("sair").textContent = "Sair"; $("painelTroca").hidden = true; $("msgTroca").hidden = true; mostrarTela("login");
+});
+
+(async () => {
+  const sessao = ler("sv04_sessao");
+  if (sessao) { TOKEN = sessao; try { await validarToken(); await abrirEditor(); return; } catch (_) { TOKEN = ""; guardar("sv04_sessao", null); } }
+  try { const a = await lerAcesso(); mostrarTela(a ? "login" : "config"); }
+  catch (_) { mostrarTela("login"); aviso($("msgLogin"), "erro", "Não consegui conectar. Confira a internet e recarregue a página."); }
+})();
+</script>
+</body>
+</html>

@@ -18,6 +18,15 @@ Organizado por **Admin Amora**.
 
 ---
 
+## 1.1 Painel Admin (editar sem mexer em código)
+
+No rodapé do site tem o link **Área do admin** (ou abra `admin.html`). Lá você entra com **e-mail e senha** e edita infrações, códigos, punições, comandos, significados, palavras-chave, comandos de apoio e avisos. Depois toque em **Salvar no site**.
+
+- **Primeiro acesso:** o painel pede a **chave do GitHub** (o passo a passo está no próprio painel) e você cria o e-mail e a senha.
+- **Trocar senha:** dentro do painel, botão **Trocar senha**.
+- **Esqueci a senha:** na tela de login, use **Esqueci a senha** e cole a chave do GitHub de novo.
+- A chave fica guardada trancada (criptografada) no arquivo `acesso.json`. Sem o e-mail e a senha certos, ninguém consegue usá-la.
+
 ## 2. Os arquivos do site
 
 | Arquivo | Para que serve | Precisa editar? |
