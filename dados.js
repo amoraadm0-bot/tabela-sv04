@@ -182,3 +182,51 @@ const SIGNIFICADOS = {
   "INA": "Invasão Não Autorizada de organização ou corporação",
   "TOS": "Violação dos Termos de Uso da Comunidade",
 };
+
+/* =====================================================================
+   PALAVRAS-CHAVE PARA O "O QUE ACONTECEU?" (preenchimento automático)
+   Quando o admin escreve o que aconteceu, o site procura estas palavras
+   e escolhe a infração sozinho. Pode acrescentar palavras à vontade,
+   separadas por espaço. O nome da esquerda é igual ao nome da infração.
+   ===================================================================== */
+const PALAVRAS_CHAVE = {
+  "CF incompleto": "cf incompleto",
+  "Voltar para cela": "voltou cela fugiu cadeia prisão",
+  "CC": "cortou cortar corta caminho calçada grama gramado terreno fora via encurtar",
+  "ABUSE": "policial policia abuso abusou poder autoridade",
+  "USE": "viatura veiculo trabalho organização pessoal usou",
+  "VPA": "voltou voltar ação morreu retornou",
+  "ASF": "safe safezone zona segura",
+  "Forçar RP": "forçou forçar provocou provocar arma mão desafiou desafiar",
+  "Ofensas a player": "xingou xingar xingando ofendeu ofensa ofensas insultou insulto mãe familia",
+  "Farpando ferido": "humilhou humilhar ferido zoou zoar desrespeitou urinou caido",
+  "MDM": "varios vários três 3 muitos massa pessoas jogadores",
+  "PvP": "pvp atirou atirar tiro motivo interação",
+  "VDM": "atropelou atropelar atropelando atropelamento carro moto passou cima veiculo",
+  "MG": "metagaming informação discord fora jogo live stream emoji",
+  "CL": "saiu deslogou quitou quit caiu desconectou combat",
+  "DM": "matou matar motivo atirou feriu morte",
+  "RK": "vingança vingou revenge voltou quem matou",
+  "SK": "spawn nasceu território base",
+  "TK": "aliado aliada propria facção membro time companheiro",
+  "SAAV": "amor vida cooperou reagiu rendido apontada",
+  "ANTIRP": "anti antirp",
+  "Flaming RP": "ódio odio xingou ofensa insulto",
+  "Flaming": "ódio odio xingou ofensa insulto voip",
+  "KOS": "vista mate kill sight farda matou policial policia organização",
+  "PK": "lembrou memória morte personagem esqueceu",
+  "RPFW": "ganhar vantagem win benefício guardou",
+  "MIX": "misturou fora assunto ooc real",
+  "AAP": "atrapalhou atrapalhar abordagem gritou",
+  "DMA": "bateu danificou danificar explodiu quebrou carro veiculo",
+  "NRA": "arma hospital delegacia prefeitura praça igreja público",
+  "FAIL": "falha regra errado assalto sequestro horario",
+  "TSC": "transferiu transferencia item admin",
+  "ECI": "ensinou comando errado",
+  "Ruídos externos": "barulho ruído ruido microfone voz modificador",
+  "Música no VoIP": "musica música som voip",
+  "Flood no chat": "flood spam repetiu repetindo chat",
+  "Mal uso do /me /do /try": "me do try",
+  "Caps Lock": "caps maiúsculo maiusculo gritando letra",
+  "Mal uso do /report": "report spam",
+};

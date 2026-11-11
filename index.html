@@ -61,6 +61,10 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .montar .campos{display:flex;gap:10px;flex-wrap:wrap}
 .montar input,.montar select{flex:1 1 220px;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:inherit}
 .montar input:focus,.montar select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sugestoes{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.sug{font:500 13px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.sug[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.sug:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .resultado{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 #cmdPronto{flex:1 1 260px;min-width:0;font-family:var(--mono);font-weight:700;font-size:15px;background:var(--accent-soft);border:1px dashed var(--accent);border-radius:10px;padding:11px 12px;word-break:break-word}
 #cmdPronto.vazio{color:var(--muted);font-weight:500;font-family:var(--body);font-size:14px}
@@ -117,7 +121,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
       <h3>Montar o comando (mais rápido)</h3>
       <ol>
         <li>No quadro <b>Montar comando</b>, digite o <b>nick ou ID do jogador</b>.</li>
-        <li>Escolha a <b>infração</b> na lista.</li>
+        <li>Escreva <b>o que aconteceu</b> (ex.: <code>atropelou de propósito</code>, <code>cortou caminho pela grama</code>, <code>xingou a mãe</code>). O site escolhe a infração sozinho e mostra outras sugestões para tocar, se a primeira não for a certa.</li>
+        <li>Ou escolha a <b>infração</b> direto na lista, manualmente.</li>
         <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
       </ol>
 
@@ -158,7 +163,11 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
     <h2 id="montarTit">Montar comando</h2>
     <div class="campos">
       <input id="jogador" type="text" placeholder="Nick ou ID do jogador" aria-label="Nick ou ID do jogador" autocomplete="off">
-      <select id="infracaoSel" aria-label="Infração"></select>
+      <input id="aconteceu" type="text" placeholder="O que aconteceu? (ex.: atropelou de propósito)" aria-label="O que aconteceu" autocomplete="off">
+    </div>
+    <div id="sugestoes" class="sugestoes" hidden></div>
+    <div class="campos">
+      <select id="infracaoSel" aria-label="Infração (escolher manualmente)"></select>
     </div>
     <div class="resultado">
       <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
@@ -251,7 +260,40 @@ function montar() {
   pronto.textContent = n ? t.replace(/\[(nick|ID)\]|\{ID\}/g, n) : t;
   pronto.className = ""; copiar.disabled = false;
 }
-jogador.addEventListener("input", montar); selInf.addEventListener("change", montar);
+jogador.addEventListener("input", montar);
+selInf.addEventListener("change", () => { marcarSug(); montar(); });
+
+// Preenchimento automático pelo "O que aconteceu?"
+const PCH = (typeof PALAVRAS_CHAVE !== "undefined") ? PALAVRAS_CHAVE : {};
+const PARAR = new Set("que com sem para pra por uma uns umas dos das nos nas ele ela eles elas foi era ser tava estava muito mais aqui ali isso esse essa sua seu meu minha".split(" "));
+const normA = s => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const toks = s => normA(s).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(t => t && (t.length >= 3 || /\d/.test(t)) && !PARAR.has(t));
+const raiz = t => t.length > 4 ? t.slice(0, 4) : t;
+const ALVOS = LISTA.map(r => {
+  const sig = curto(r.infracao);
+  const txt = [r.infracao, signif(r), PCH[r.infracao] || PCH[sig] || ""].join(" ");
+  return { sigla: normA(sig), raizes: new Set(toks(txt).map(raiz)), palavras: toks(txt) };
+});
+const sugBox = document.getElementById("sugestoes");
+function marcarSug() { sugBox.querySelectorAll(".sug").forEach(b => b.setAttribute("aria-pressed", b.dataset.i === selInf.value)); }
+document.getElementById("aconteceu").addEventListener("input", e => {
+  const q = toks(e.target.value);
+  if (!q.length) { sugBox.hidden = true; sugBox.innerHTML = ""; return; }
+  const ranking = ALVOS.map((a, i) => {
+    let pts = 0;
+    q.forEach(t => {
+      if (t === a.sigla) pts += 3;
+      else if (a.raizes.has(raiz(t)) || a.palavras.some(p => t.length >= 4 && p.startsWith(t))) pts += 1;
+    });
+    return { i, pts };
+  }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || a.i - b.i).slice(0, 4);
+  if (!ranking.length) { sugBox.hidden = false; sugBox.innerHTML = "Nenhuma infração encontrada. Escolha na lista abaixo."; return; }
+  const secao = r => SECOES.find(s => s.linhas.includes(r)).titulo;
+  sugBox.innerHTML = "Sugestões: " + ranking.map(x => { const r = LISTA[x.i]; return `<button type="button" class="sug" data-i="${x.i}">${esc(r.infracao)} · ${esc(r.codigo)} <small>(${esc(secao(r))})</small></button>`; }).join("");
+  sugBox.hidden = false;
+  selInf.value = String(ranking[0].i); marcarSug(); montar();
+});
+sugBox.addEventListener("click", e => { const b = e.target.closest(".sug"); if (!b) return; selInf.value = b.dataset.i; marcarSug(); montar(); });
 copiar.addEventListener("click", () => {
   const t = pronto.textContent;
   const ok = () => { copiar.textContent = "Copiado!"; setTimeout(() => copiar.textContent = "Copiar", 1100); };

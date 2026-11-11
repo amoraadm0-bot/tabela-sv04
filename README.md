@@ -84,6 +84,16 @@ Os significados ficam numa lista só, no **fim do `dados.js`** (`SIGNIFICADOS`).
 - Para uma sigla nova: copie uma linha, cole embaixo e troque os dois textos. O nome da esquerda tem que ser igual ao nome da infração na tabela.
 - Na tabela, a pessoa toca no nome da infração e o significado abre embaixo.
 
+## 6.2 Melhorar o preenchimento automático
+
+No quadro **Montar comando**, o admin escreve o que aconteceu e o site escolhe a infração sozinho. Ele procura as palavras da lista `PALAVRAS_CHAVE`, no fim do `dados.js`:
+
+```
+  "VDM": "atropelou atropelar atropelando atropelamento carro moto passou cima veiculo",
+```
+
+Se alguém escrever algo e o site errar a infração, acrescente a palavra que a pessoa usou na infração certa (separada por espaço) e salve.
+
 ## 7. Mudar os comandos de apoio ou os avisos
 
 - **Comandos de apoio** (`/unjail`, `/unmute`, `/goto` etc.): ficam na lista `APOIO`, no fim do `dados.js`. Mesma regra: troque o texto entre aspas.
