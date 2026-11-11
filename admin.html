@@ -86,6 +86,7 @@ details ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;g
     <h2 id="cfgTitulo">Primeira configuração</h2>
     <p class="dica" id="cfgTexto">Faça isso uma vez só. Você vai criar o seu e-mail e senha de acesso ao painel. Para isso, precisa da <b>chave do GitHub</b> (veja como conseguir logo abaixo).</p>
     <label>Chave do GitHub<input id="cChave" type="password" autocomplete="off" placeholder="github_pat_..."></label>
+    <label>Seu nome (ex.: Admin Amora)<input id="cNome" type="text" autocomplete="off" placeholder="como você quer aparecer"></label>
     <label>E-mail para entrar<input id="cEmail" type="email" autocomplete="username" placeholder="seu e-mail"></label>
     <div class="linha">
       <label>Senha (mínimo 8 caracteres)<input id="cSenha" type="password" autocomplete="new-password"></label>
@@ -111,7 +112,7 @@ details ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;g
     <div class="card" style="margin-bottom:18px">
       <div class="linha" style="justify-content:space-between;align-items:center">
         <p class="dica" style="margin:0">Edite os campos e toque em <b>Salvar no site</b>. Depois de salvar, o site atualiza em 1 a 2 minutos.</p>
-        <div class="linha"><button class="btn" id="abrirTroca">Trocar senha</button><button class="btn" id="sair">Sair</button></div>
+        <div class="linha"><button class="btn" id="abrirPessoas" hidden>Pessoas com acesso</button><button class="btn" id="abrirTroca">Trocar senha</button><button class="btn" id="sair">Sair</button></div>
       </div>
       <div id="painelTroca" class="linha" hidden>
         <label>Senha nova (mínimo 8)<input id="tSenha" type="password" autocomplete="new-password"></label>
@@ -119,6 +120,19 @@ details ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;g
         <button class="btn prim" id="trocar">Salvar senha nova</button>
       </div>
       <div id="msgTroca" hidden></div>
+      <p class="dica" id="quem" style="margin:0"></p>
+      <div id="painelPessoas" class="card" style="background:var(--bg)" hidden>
+        <h2>Pessoas com acesso</h2>
+        <p class="dica">Crie um acesso para quem também pode editar a tabela (ex.: o líder). Você escolhe uma senha provisória e passa para a pessoa; ela troca no primeiro acesso, em <b>Trocar senha</b>.</p>
+        <div id="listaPessoas" class="lista"></div>
+        <div class="linha">
+          <label>Nome<input id="pNome" type="text" autocomplete="off" placeholder="ex.: Líder S04"></label>
+          <label>E-mail da pessoa<input id="pEmail" type="email" autocomplete="off"></label>
+          <label>Senha provisória (mín. 8)<input id="pSenha" type="text" autocomplete="off"></label>
+        </div>
+        <div class="linha"><button class="btn prim" id="addPessoa">+ Criar acesso</button></div>
+        <div id="msgPessoas" hidden></div>
+      </div>
     </div>
     <nav class="abas" id="abas" role="tablist"></nav>
     <div id="conteudo" style="margin-top:16px"></div>
@@ -138,7 +152,7 @@ details ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;g
 
 <script>
 const REPO = "amoraadm0-bot/tabela-sv04", ARQ = "dados.js", API = `https://api.github.com/repos/${REPO}/contents/${ARQ}`;
-let EMAIL = "", TOKEN = "", SHA = "", D = null, ORIGINAL = "", abaAtual = 0;
+let NOME = "", DONO = false, EMAIL = "", TOKEN = "", SHA = "", D = null, ORIGINAL = "", abaAtual = 0;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const curto = n => String(n || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
@@ -172,11 +186,14 @@ async function destrancar(a, email, senha) {
   const k = await chaveCripto(email, senha, bb64(a.salt));
   return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: bb64(a.iv) }, k, bb64(a.dados)));
 }
+// acesso.json guarda uma lista de pessoas; cada uma tranca a mesma chave com o próprio e-mail e senha
 async function lerAcesso() {
   const r = await fetch(`https://raw.githubusercontent.com/${REPO}/main/acesso.json?t=` + Date.now(), { cache: "no-store" });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error("rede");
-  return r.json();
+  const a = await r.json();
+  if (Array.isArray(a.usuarios)) return a;
+  return { v: 2, usuarios: [{ nome: "Admin", dono: true, salt: a.salt, iv: a.iv, dados: a.dados }] };
 }
 async function shaAcesso() { try { return (await gh(ACESSO + "?t=" + Date.now())).sha; } catch (e) { if (e.status === 404) return undefined; throw e; } }
 async function gravarAcesso(obj, msgCommit) {
@@ -190,12 +207,17 @@ async function validarToken() {
 const erroToken = e => e.status === 401 ? "Chave do GitHub inválida ou vencida. Gere uma nova." :
   e.status === 403 || e.status === 404 ? "Essa chave não tem permissão. Confira se escolheu <b>tabela-sv04</b> e <b>Contents: Read and write</b>." :
   "Não consegui conectar ao GitHub. Confira a internet e tente de novo.";
+const norma = n => String(n || "").trim().toLowerCase();
 
 function mostrarTela(t) {
   $("telaLogin").hidden = t !== "login"; $("telaConfig").hidden = t !== "config";
   $("telaEditor").hidden = t !== "editor"; $("barra").hidden = t !== "editor";
 }
-async function abrirEditor() { await carregar(); mostrarTela("editor"); }
+async function abrirEditor() {
+  await carregar(); mostrarTela("editor");
+  $("quem").textContent = NOME ? `Conectado como ${NOME}${DONO ? " (dona)" : ""}` : "";
+  $("abrirPessoas").hidden = !DONO; $("painelPessoas").hidden = true;
+}
 
 async function entrar() {
   const msg = $("msgLogin"), email = $("lEmail").value, senha = $("lSenha").value;
@@ -204,25 +226,31 @@ async function entrar() {
   try {
     const a = await lerAcesso();
     if (!a) { mostrarTela("config"); return; }
-    try { TOKEN = await destrancar(a, email, senha); } catch (_) { TOKEN = ""; return aviso(msg, "erro", "E-mail ou senha incorretos."); }
+    let achou = null;
+    for (const u of a.usuarios) { try { TOKEN = await destrancar(u, email, senha); achou = u; break; } catch (_) {} }
+    if (!achou) { TOKEN = ""; return aviso(msg, "erro", "E-mail ou senha incorretos."); }
     await validarToken();
-    if ($("lembrar").checked) guardar("sv04_sessao", TOKEN);
-    EMAIL = email; msg.hidden = true; $("lSenha").value = "";
+    NOME = achou.nome; DONO = !!achou.dono; EMAIL = email;
+    if ($("lembrar").checked) { guardar("sv04_sessao", TOKEN); guardar("sv04_nome", NOME); }
+    msg.hidden = true; $("lSenha").value = "";
     await abrirEditor();
   } catch (e) { TOKEN = ""; aviso(msg, "erro", e.status ? erroToken(e) + " Use “Esqueci a senha” para cadastrar uma chave nova." : "Não consegui conectar. Confira a internet e tente de novo."); }
 }
 
 async function criarAcesso() {
-  const msg = $("msgConfig"), chave = $("cChave").value.trim(), email = $("cEmail").value.trim(), s1 = $("cSenha").value, s2 = $("cSenha2").value;
-  if (!chave || !email) return aviso(msg, "erro", "Preencha a chave do GitHub e o e-mail.");
+  const msg = $("msgConfig"), chave = $("cChave").value.trim(), nome = $("cNome").value.trim(), email = $("cEmail").value.trim(), s1 = $("cSenha").value, s2 = $("cSenha2").value;
+  if (!chave || !nome || !email) return aviso(msg, "erro", "Preencha a chave do GitHub, o nome e o e-mail.");
   if (s1.length < 8) return aviso(msg, "erro", "A senha precisa ter pelo menos 8 caracteres.");
   if (s1 !== s2) return aviso(msg, "erro", "As duas senhas não estão iguais.");
   aviso(msg, "info", "Criando acesso...");
   TOKEN = chave;
   try {
     await validarToken();
-    await gravarAcesso(await trancar(chave, email, s1), "Acesso do painel atualizado");
-    EMAIL = email; ["cChave", "cSenha", "cSenha2"].forEach(id => $(id).value = "");
+    const a = (await lerAcesso()) || { v: 2, usuarios: [] };
+    a.usuarios = a.usuarios.filter(u => norma(u.nome) !== norma(nome));
+    a.usuarios.unshift({ nome, dono: true, ...(await trancar(chave, email, s1)) });
+    await gravarAcesso({ v: 2, usuarios: a.usuarios }, "Acesso do painel atualizado");
+    NOME = nome; DONO = true; EMAIL = email; ["cChave", "cSenha", "cSenha2"].forEach(id => $(id).value = "");
     aviso(msg, "ok", "Acesso criado!");
     await abrirEditor();
   } catch (e) { TOKEN = ""; aviso(msg, "erro", erroToken(e)); }
@@ -230,14 +258,58 @@ async function criarAcesso() {
 
 async function trocarSenha() {
   const msg = $("msgTroca"), s1 = $("tSenha").value, s2 = $("tSenha2").value;
-  if (!EMAIL) return aviso(msg, "erro", "Para trocar a senha, saia e entre de novo com e-mail e senha.");
+  if (!EMAIL || !NOME) return aviso(msg, "erro", "Para trocar a senha, saia e entre de novo com e-mail e senha.");
   if (s1.length < 8) return aviso(msg, "erro", "A senha precisa ter pelo menos 8 caracteres.");
   if (s1 !== s2) return aviso(msg, "erro", "As duas senhas não estão iguais.");
   aviso(msg, "info", "Salvando senha nova...");
   try {
-    await gravarAcesso(await trancar(TOKEN, EMAIL, s1), "Senha do painel trocada");
+    const a = await lerAcesso();
+    const i = a.usuarios.findIndex(u => norma(u.nome) === norma(NOME));
+    const novo = { nome: NOME, dono: DONO, ...(await trancar(TOKEN, EMAIL, s1)) };
+    if (i >= 0) a.usuarios[i] = novo; else a.usuarios.push(novo);
+    await gravarAcesso({ v: 2, usuarios: a.usuarios }, "Senha do painel trocada");
     $("tSenha").value = $("tSenha2").value = ""; $("painelTroca").hidden = true;
     aviso(msg, "ok", "Senha trocada! Use a senha nova na próxima vez.");
+  } catch (e) { aviso(msg, "erro", erroToken(e)); }
+}
+
+/* ---------- pessoas com acesso (só a dona vê) ---------- */
+async function listarPessoas() {
+  const msg = $("msgPessoas");
+  try {
+    const a = await lerAcesso();
+    $("listaPessoas").innerHTML = a.usuarios.map(u => `<div class="item" style="flex-direction:row;justify-content:space-between;align-items:center">
+      <span><b>${esc(u.nome)}</b> <span class="dica" style="display:inline">${u.dono ? "· dona" : "· pode editar"}</span></span>
+      ${norma(u.nome) === norma(NOME) ? '<span class="dica">você</span>' : `<button class="btn perigo" data-remover="${esc(u.nome)}">Remover</button>`}
+    </div>`).join("");
+  } catch (_) { aviso(msg, "erro", "Não consegui carregar a lista. Confira a internet."); }
+}
+async function adicionarPessoa() {
+  const msg = $("msgPessoas"), nome = $("pNome").value.trim(), email = $("pEmail").value.trim(), senha = $("pSenha").value;
+  if (!nome || !email) return aviso(msg, "erro", "Preencha o nome e o e-mail da pessoa.");
+  if (senha.length < 8) return aviso(msg, "erro", "A senha provisória precisa ter pelo menos 8 caracteres.");
+  aviso(msg, "info", "Criando acesso...");
+  try {
+    const a = await lerAcesso();
+    if (a.usuarios.some(u => norma(u.nome) === norma(nome))) return aviso(msg, "erro", "Já existe alguém com esse nome. Use outro nome.");
+    a.usuarios.push({ nome, dono: false, ...(await trancar(TOKEN, email, senha)) });
+    await gravarAcesso({ v: 2, usuarios: a.usuarios }, "Novo acesso ao painel");
+    ["pNome", "pEmail", "pSenha"].forEach(id => $(id).value = "");
+    aviso(msg, "ok", `Acesso criado para <b>${esc(nome)}</b>. Passe o e-mail e a senha provisória para a pessoa e peça para ela trocar a senha no primeiro acesso.`);
+    listarPessoas();
+  } catch (e) { aviso(msg, "erro", erroToken(e)); }
+}
+let removerPendente = null;
+async function removerPessoa(b) {
+  const nome = b.dataset.remover, msg = $("msgPessoas");
+  if (removerPendente !== b) { removerPendente = b; b.textContent = "Confirmar?"; setTimeout(() => { if (removerPendente === b) { removerPendente = null; b.textContent = "Remover"; } }, 3000); return; }
+  removerPendente = null;
+  try {
+    const a = await lerAcesso();
+    a.usuarios = a.usuarios.filter(u => norma(u.nome) !== norma(nome));
+    await gravarAcesso({ v: 2, usuarios: a.usuarios }, "Acesso ao painel removido");
+    aviso(msg, "ok", `Acesso de <b>${esc(nome)}</b> removido.`);
+    listarPessoas();
   } catch (e) { aviso(msg, "erro", erroToken(e)); }
 }
 
@@ -446,15 +518,27 @@ $("esqueci").addEventListener("click", () => {
 $("voltarLogin").addEventListener("click", () => mostrarTela("login"));
 $("abrirTroca").addEventListener("click", () => { $("painelTroca").hidden = !$("painelTroca").hidden; $("msgTroca").hidden = true; });
 $("trocar").addEventListener("click", trocarSenha);
+$("abrirPessoas").addEventListener("click", () => { const p = $("painelPessoas"); p.hidden = !p.hidden; $("msgPessoas").hidden = true; if (!p.hidden) listarPessoas(); });
+$("addPessoa").addEventListener("click", adicionarPessoa);
+$("listaPessoas").addEventListener("click", e => { const b = e.target.closest("[data-remover]"); if (b) removerPessoa(b); });
 $("sair").addEventListener("click", () => {
   if (D && JSON.stringify(D) !== ORIGINAL && $("sair").textContent !== "Sair sem salvar?") { $("sair").textContent = "Sair sem salvar?"; setTimeout(() => $("sair").textContent = "Sair", 3000); return; }
-  guardar("sv04_sessao", null); TOKEN = ""; EMAIL = ""; D = null; ORIGINAL = "";
+  guardar("sv04_sessao", null); guardar("sv04_nome", null); TOKEN = ""; EMAIL = ""; NOME = ""; DONO = false; D = null; ORIGINAL = "";
   $("sair").textContent = "Sair"; $("painelTroca").hidden = true; $("msgTroca").hidden = true; mostrarTela("login");
 });
 
 (async () => {
   const sessao = ler("sv04_sessao");
-  if (sessao) { TOKEN = sessao; try { await validarToken(); await abrirEditor(); return; } catch (_) { TOKEN = ""; guardar("sv04_sessao", null); } }
+  if (sessao) {
+    TOKEN = sessao;
+    try {
+      await validarToken();
+      NOME = ler("sv04_nome") || "";
+      const a = await lerAcesso(); const u = a && a.usuarios.find(x => norma(x.nome) === norma(NOME));
+      if (!u) throw new Error("removido");
+      DONO = !!u.dono; await abrirEditor(); return;
+    } catch (_) { TOKEN = ""; NOME = ""; guardar("sv04_sessao", null); guardar("sv04_nome", null); }
+  }
   try { const a = await lerAcesso(); mostrarTela(a ? "login" : "config"); }
   catch (_) { mostrarTela("login"); aviso($("msgLogin"), "erro", "Não consegui conectar. Confira a internet e recarregue a página."); }
 })();

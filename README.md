@@ -25,6 +25,7 @@ No rodapé do site tem o link **Área do admin** (ou abra `admin.html`). Lá voc
 - **Primeiro acesso:** o painel pede a **chave do GitHub** (o passo a passo está no próprio painel) e você cria o e-mail e a senha.
 - **Trocar senha:** dentro do painel, botão **Trocar senha**.
 - **Esqueci a senha:** na tela de login, use **Esqueci a senha** e cole a chave do GitHub de novo.
+- **Dar acesso a outra pessoa (ex.: líder):** dentro do painel, botão **Pessoas com acesso**. Coloque nome, e-mail e uma senha provisória e passe para a pessoa; ela troca a senha no primeiro acesso. Só a dona vê esse botão. Para tirar o acesso, toque em **Remover**.
 - A chave fica guardada trancada (criptografada) no arquivo `acesso.json`. Sem o e-mail e a senha certos, ninguém consegue usá-la.
 
 ## 2. Os arquivos do site
