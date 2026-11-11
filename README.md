@@ -72,6 +72,18 @@ comando: ""
 
 Na tabela vai aparecer **"Pedir a um superior"**.
 
+## 6.1 Mudar o significado de uma sigla
+
+Os significados ficam numa lista só, no **fim do `dados.js`** (`SIGNIFICADOS`). Cada sigla aparece uma vez só, e o significado vale para todas as tabelas onde ela aparece (ex.: FAIL em Prisões e em Banimentos).
+
+```
+  "VDM": "Vehicle Deathmatch: atropelar jogadores de propósito",
+```
+
+- Para mudar: troque o texto da direita.
+- Para uma sigla nova: copie uma linha, cole embaixo e troque os dois textos. O nome da esquerda tem que ser igual ao nome da infração na tabela.
+- Na tabela, a pessoa toca no nome da infração e o significado abre embaixo.
+
 ## 7. Mudar os comandos de apoio ou os avisos
 
 - **Comandos de apoio** (`/unjail`, `/unmute`, `/goto` etc.): ficam na lista `APOIO`, no fim do `dados.js`. Mesma regra: troque o texto entre aspas.
