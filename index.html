@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="Admin Amora">
+<title>Punições e Comandos SV04</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Para mudar punições, edite o arquivo dados.js (não precisa mexer aqui). */
+:root{
+  --bg:#060d1c; --panel:#0b1730; --row:#0e1d3a; --line:#1d3566;
+  --fg:#e6eefc; --muted:#8fa6cf; --accent:#2f8cff; --accent-soft:#12305f;
+  --warn:#ffb547; --danger:#ff5d6c;
+  --display:"Oswald",Impact,"Arial Narrow",sans-serif;
+  --body:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1000px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:clamp(28px,6vw,44px);letter-spacing:.02em;margin:0;line-height:1.05;text-wrap:balance}
+header h1 span{color:var(--accent)}
+header p{margin:6px 0 0;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-size:12px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:0;background:var(--bg);padding-block:10px;z-index:5}
+#q{flex:1 1 240px;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 14px;font:inherit}
+#q:focus{outline:2px solid var(--accent);outline-offset:1px}
+.jump{display:flex;gap:6px;flex-wrap:wrap}
+.jump a{color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;background:var(--panel)}
+.jump a:hover,.jump a:focus-visible{border-color:var(--accent);outline:none}
+#sections{display:flex;flex-direction:column;gap:22px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;scroll-margin-top:70px}
+section h2{font-family:var(--display);font-size:24px;margin:0;letter-spacing:.04em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+section h2 small{font-family:var(--body);font-size:13px;color:var(--muted);letter-spacing:0;font-weight:400}
+.cmdmain{margin:8px 0 12px;font-size:14px;color:var(--muted)}
+.cmdmain b{color:var(--fg);font-weight:600}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--row)}
+td.code{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;width:70px}
+td.pun{font-variant-numeric:tabular-nums}
+.chip{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--fg);background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.chip:hover,.chip.ok{background:var(--accent)}
+.chip:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.nocmd{color:var(--warn);font-size:13px}
+.note{border-left:3px solid var(--warn);background:var(--row);padding:10px 12px;border-radius:0 8px 8px 0;font-size:14px;margin:10px 0 6px}
+.note.vermelho{border-color:var(--danger)}
+.note b{color:var(--warn)}
+.note.vermelho b{color:var(--danger)}
+.empty{color:var(--muted);padding:12px 10px;font-size:14px}
+[hidden]{display:none!important}
+footer{color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Punições <span>+</span> Comandos <span>SV04</span></h1>
+    <p>Rio Rise RP · Admin Level 1 · toque no comando para copiar</p>
+  </header>
+
+  <div class="tools">
+    <input id="q" type="search" placeholder="Buscar infração ou código (ex.: VDM, 4.3, flood)" aria-label="Buscar infração">
+    <nav class="jump" id="jump" aria-label="Seções"></nav>
+  </div>
+
+  <div id="sections"></div>
+
+  <section id="apoio">
+    <h2>Comandos de apoio <small>retirar punição e verificar</small></h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Para quê</th><th>Comando</th></tr></thead>
+      <tbody id="apoioBody"></tbody>
+    </table></div>
+  </section>
+
+  <div id="avisos"></div>
+
+  <footer>SV04 · Organização e respeito sempre · Admin Amora</footer>
+</div>
+
+<script src="dados.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const chip = c => `<button type="button" class="chip" data-c="${esc(c)}" aria-label="Copiar ${esc(c)}">${esc(c)}</button>`;
+const nocmd = '<span class="nocmd">Pedir a um superior</span>';
+
+document.getElementById("jump").innerHTML =
+  SECOES.map(s => `<a href="#${s.id}">${esc(s.titulo)}</a>`).join("") + '<a href="#apoio">Apoio</a>';
+
+document.getElementById("sections").innerHTML = SECOES.map(s => `
+  <section id="${s.id}">
+    <h2>${esc(s.titulo)} <small>${esc(s.subtitulo)}</small></h2>
+    <p class="cmdmain">${s.explicacao || ""}</p>
+    ${s.aviso ? `<div class="note">${s.aviso}</div>` : ""}
+    <div class="scroll"><table>
+      <thead><tr><th>Infração</th><th>Código</th><th>${esc(s.coluna)}</th><th>Comando</th></tr></thead>
+      <tbody>${s.linhas.map(r => `<tr data-k="${esc((r.infracao+" "+r.codigo).toLowerCase())}">
+        <td>${esc(r.infracao)}</td><td class="code">${esc(r.codigo)}</td><td class="pun">${esc(r.punicao)}</td>
+        <td>${r.comando ? chip(r.comando) : nocmd}</td></tr>`).join("")}
+      <tr class="none" hidden><td colspan="4" class="empty">Nada encontrado nesta seção.</td></tr></tbody>
+    </table></div>
+  </section>`).join("");
+
+document.getElementById("apoioBody").innerHTML =
+  APOIO.map(a => `<tr><td>${esc(a.para)}</td><td>${chip(a.comando)}</td></tr>`).join("");
+
+document.getElementById("avisos").innerHTML =
+  AVISOS.map(a => `<div class="note ${a.cor === "vermelho" ? "vermelho" : ""}">${a.texto}</div>`).join("");
+
+document.addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  const t = b.dataset.c;
+  const done = () => { b.classList.add("ok"); b.textContent = "Copiado!"; setTimeout(() => { b.classList.remove("ok"); b.textContent = t; }, 1100); };
+  const sel = () => { const r = document.createRange(); r.selectNodeContents(b); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+  try { navigator.clipboard.writeText(t).then(done, sel); } catch (_) { sel(); }
+});
+
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+document.getElementById("q").addEventListener("input", e => {
+  const q = norm(e.target.value.trim());
+  document.querySelectorAll("#sections section").forEach(sec => {
+    let n = 0;
+    sec.querySelectorAll("tbody tr[data-k]").forEach(tr => {
+      const show = !q || norm(tr.dataset.k).includes(q); tr.hidden = !show; if (show) n++;
+    });
+    sec.querySelector("tr.none").hidden = n > 0;
+  });
+});
+</script>
+</body>
+</html>
