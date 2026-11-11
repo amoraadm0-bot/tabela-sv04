@@ -45,6 +45,7 @@ tbody tr:hover{background:var(--row)}
 td.code{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;width:70px}
 td.pun{font-variant-numeric:tabular-nums}
 .chip{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--fg);background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:5px 9px;cursor:pointer;white-space:normal;text-align:left;line-height:1.35}
+.sig{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.35;max-width:46ch}
 .chip:hover,.chip.ok{background:var(--accent)}
 .chip:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .nocmd{color:var(--warn);font-size:13px}
@@ -172,8 +173,8 @@ document.getElementById("sections").innerHTML = SECOES.map(s => `
     ${s.aviso ? `<div class="note">${s.aviso}</div>` : ""}
     <div class="scroll"><table>
       <thead><tr><th>Infração</th><th>Código</th><th>${esc(s.coluna)}</th><th>Comando</th></tr></thead>
-      <tbody>${s.linhas.map(r => `<tr data-k="${esc((r.infracao+" "+r.codigo).toLowerCase())}">
-        <td>${esc(r.infracao)}</td><td class="code">${esc(r.codigo)}</td><td class="pun">${esc(r.punicao)}</td>
+      <tbody>${s.linhas.map(r => `<tr data-k="${esc((r.infracao+" "+r.codigo+" "+(r.significado||"")).toLowerCase())}">
+        <td>${esc(r.infracao)}${r.significado ? `<small class="sig">${esc(r.significado)}</small>` : ""}</td><td class="code">${esc(r.codigo)}</td><td class="pun">${esc(r.punicao)}</td>
         <td>${r.comando ? chip(completo(r)) : nocmd}</td></tr>`).join("")}
       <tr class="none" hidden><td colspan="4" class="empty">Nada encontrado nesta seção.</td></tr></tbody>
     </table></div>
