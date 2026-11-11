@@ -54,14 +54,80 @@ td.pun{font-variant-numeric:tabular-nums}
 .empty{color:var(--muted);padding:12px 10px;font-size:14px}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:13px;text-align:center}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.btn-manual{font:600 14px var(--body);color:var(--fg);background:var(--accent);border:0;border-radius:10px;padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.btn-manual:hover{filter:brightness(1.12)}
+.btn-manual:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0;width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 48px)}
+dialog::backdrop{background:rgba(2,6,15,.75)}
+.man-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.man-head h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:.04em}
+.fechar{background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.fechar:hover,.fechar:focus-visible{border-color:var(--accent);outline:none}
+.man-body{padding:6px 18px 18px;font-size:15px}
+.man-body h3{font-family:var(--display);font-size:17px;letter-spacing:.04em;color:var(--accent);margin:18px 0 6px}
+.man-body ol,.man-body ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.man-body p{margin:6px 0}
+.man-body code{font-family:var(--mono);background:var(--accent-soft);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
+.man-body .warn{color:var(--warn)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Punições <span>+</span> Comandos <span>SV04</span></h1>
-    <p>Rio Rise RP · Admin Level 1 · toque no comando para copiar</p>
+    <div>
+      <h1>Punições <span>+</span> Comandos <span>SV04</span></h1>
+      <p>Rio Rise RP · Admin Level 1 · toque no comando para copiar</p>
+    </div>
+    <button type="button" class="btn-manual" id="abrirManual">📖 Manual de uso</button>
   </header>
+
+  <dialog id="manual" aria-labelledby="manTitulo">
+    <div class="man-head">
+      <h2 id="manTitulo">Manual de uso</h2>
+      <button type="button" class="fechar" id="fecharManual">Fechar ✕</button>
+    </div>
+    <div class="man-body">
+      <h3>Para que serve</h3>
+      <p>Cada infração aparece numa linha com o <b>código</b>, a <b>punição</b> (ou tempo) e o <b>comando</b> certo para aplicar. Não precisa mais abrir duas tabelas.</p>
+
+      <h3>Achar uma infração</h3>
+      <ol>
+        <li>Digite na <b>barra de busca</b> o nome ou o código. Ex.: <code>VDM</code>, <code>4.3</code>, <code>flood</code>.</li>
+        <li>Só as linhas que batem com a busca ficam na tela.</li>
+        <li>Ou toque em <b>Kicks · Prisões · Mutes · Banimentos · Apoio</b> para pular direto para a seção.</li>
+      </ol>
+
+      <h3>Aplicar a punição</h3>
+      <ol>
+        <li>Toque no <b>comando azul</b> da linha. Ele é copiado e aparece "Copiado!".</li>
+        <li>Cole no jogo e troque <code>[ID]</code> pelo ID do jogador ou <code>[nick]</code> pelo nick.</li>
+        <li>Use o tempo que está na coluna <b>Punição / Tempo</b>.</li>
+      </ol>
+
+      <h3>Qual comando para cada tipo</h3>
+      <ul>
+        <li><b>Kick:</b> <code>/kick [ID]</code></li>
+        <li><b>Prisão:</b> <code>/jail [nick]</code> · soltar: <code>/unjail [nick]</code></li>
+        <li><b>Mute:</b> <code>/mute [ID]</code> · tirar: <code>/unmute [ID]</code></li>
+        <li><b>Mal uso do /report:</b> <code>/unmutep [ID]</code> · tirar: <code>/unmuterep [ID]</code></li>
+        <li><b>Banimento:</b> <span class="warn">o Admin Level 1 não tem comando.</span> Chame um superior e informe a infração e o código.</li>
+      </ul>
+
+      <h3>Quando tem mais de um tempo</h3>
+      <p>Ex.: <code>60 min / 1 a 5 dias</code>. O primeiro tempo é para a primeira vez; os seguintes são para reincidência. No <b>PvP</b>: 1ª vez 60 min, 2ª vez 120 min, 3ª vez ban de 3 dias. Em Zona Segura é ban direto de 3 dias.</p>
+
+      <h3>Regras importantes</h3>
+      <ul>
+        <li>Punição que exige autorização: <b>peça permissão a um superior antes</b>.</li>
+        <li>Siga a infração, o código e a reincidência desta tabela.</li>
+        <li>Na dúvida, consulte a liderança antes de aplicar algo diferente do padrão.</li>
+      </ul>
+
+      <h3>A tabela está sempre atualizada</h3>
+      <p>Quando as regras mudam, a tabela é atualizada aqui mesmo. Guarde este link e use sempre ele, em vez de imagens antigas.</p>
+    </div>
+  </dialog>
 
   <div class="tools">
     <input id="q" type="search" placeholder="Buscar infração ou código (ex.: VDM, 4.3, flood)" aria-label="Buscar infração">
@@ -119,6 +185,11 @@ document.addEventListener("click", e => {
   const sel = () => { const r = document.createRange(); r.selectNodeContents(b); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
   try { navigator.clipboard.writeText(t).then(done, sel); } catch (_) { sel(); }
 });
+
+const dlg = document.getElementById("manual");
+document.getElementById("abrirManual").addEventListener("click", () => dlg.showModal());
+document.getElementById("fecharManual").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 document.getElementById("q").addEventListener("input", e => {
