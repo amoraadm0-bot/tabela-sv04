@@ -101,12 +101,12 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
       <h1>Punições <span>+</span> Comandos <span>SV04</span></h1>
       <p>Rio Rise RP · Admin Level 1 · toque no comando para copiar</p>
     </div>
-    <a href="admin.html" class="engrenagem" title="Configurações (só admin com login)" aria-label="Configurações: painel do admin">⚙️ <span>Configurações</span></a>
   </header>
 
   <nav class="abas" role="tablist" aria-label="Páginas">
     <button type="button" class="aba" role="tab" id="aba-tabela" data-v="tabela" aria-selected="true">Tabela</button>
     <button type="button" class="aba" role="tab" id="aba-manual" data-v="manual" aria-selected="false">📖 Manual do usuário</button>
+    <a class="aba" href="admin.html" style="text-decoration:none">🔒 Acesso administrativo</a>
   </nav>
 
   <div class="vista" id="vista-manual" hidden>
@@ -308,9 +308,9 @@ copiar.addEventListener("click", () => {
 function mostrar(v) {
   document.getElementById("vista-tabela").hidden = v !== "tabela";
   document.getElementById("vista-manual").hidden = v !== "manual";
-  document.querySelectorAll(".aba").forEach(a => a.setAttribute("aria-selected", a.dataset.v === v));
+  document.querySelectorAll("button.aba").forEach(a => a.setAttribute("aria-selected", a.dataset.v === v));
 }
-document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () => {
+document.querySelectorAll("button.aba").forEach(a => a.addEventListener("click", () => {
   mostrar(a.dataset.v); history.replaceState(null, "", a.dataset.v === "manual" ? "#manual" : location.pathname);
 }));
 if (location.hash === "#manual") mostrar("manual");
