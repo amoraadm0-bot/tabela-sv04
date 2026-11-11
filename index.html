@@ -24,8 +24,9 @@ header h1{font-family:var(--display);font-size:clamp(28px,6vw,44px);letter-spaci
 header h1 span{color:var(--accent)}
 header p{margin:6px 0 0;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-size:12px}
 .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:0;background:var(--bg);padding-block:10px;z-index:5}
-#q{flex:1 1 240px;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 14px;font:inherit}
-#q:focus{outline:2px solid var(--accent);outline-offset:1px}
+#q,#alvo{flex:1 1 240px;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 14px;font:inherit}
+#alvo{flex:1 1 200px}
+#q:focus,#alvo:focus{outline:2px solid var(--accent);outline-offset:1px}
 .jump{display:flex;gap:6px;flex-wrap:wrap}
 .jump a{color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;background:var(--panel)}
 .jump a:hover,.jump a:focus-visible{border-color:var(--accent);outline:none}
@@ -43,7 +44,7 @@ tr:last-child td{border-bottom:0}
 tbody tr:hover{background:var(--row)}
 td.code{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;width:70px}
 td.pun{font-variant-numeric:tabular-nums}
-.chip{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--fg);background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.chip{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--fg);background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:5px 9px;cursor:pointer;white-space:normal;text-align:left;line-height:1.35}
 .chip:hover,.chip.ok{background:var(--accent)}
 .chip:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .nocmd{color:var(--warn);font-size:13px}
@@ -100,8 +101,10 @@ dialog::backdrop{background:rgba(2,6,15,.75)}
 
       <h3>Aplicar a punição</h3>
       <ol>
-        <li>Toque no <b>comando azul</b> da linha. Ele é copiado e aparece "Copiado!".</li>
-        <li>Cole no jogo e troque <code>[ID]</code> pelo ID do jogador ou <code>[nick]</code> pelo nick.</li>
+        <li>Se quiser, digite o <b>nick ou ID do jogador</b> no campo de cima. Ele entra sozinho em todos os comandos.</li>
+        <li>Toque no <b>comando azul</b> da linha. Ele é copiado já com a infração e o código do artigo, e aparece "Copiado!".</li>
+        <li>Cole no jogo. Se não digitou o nick antes, troque <code>[nick]</code> ou <code>[ID]</code> pelo do jogador.</li>
+        <li>Exemplo: <code>/jail Ruby_magela VDM | 4.3</code></li>
         <li>Use o tempo que está na coluna <b>Punição / Tempo</b>.</li>
       </ol>
 
@@ -131,6 +134,7 @@ dialog::backdrop{background:rgba(2,6,15,.75)}
 
   <div class="tools">
     <input id="q" type="search" placeholder="Buscar infração ou código (ex.: VDM, 4.3, flood)" aria-label="Buscar infração">
+    <input id="alvo" type="text" placeholder="Nick ou ID do jogador (opcional)" aria-label="Nick ou ID do jogador" autocomplete="off">
     <nav class="jump" id="jump" aria-label="Seções"></nav>
   </div>
 
@@ -152,6 +156,9 @@ dialog::backdrop{background:rgba(2,6,15,.75)}
 <script src="dados.js"></script>
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const curto = n => n.replace(/\s*\(.*?\)\s*/g, " ").trim();
+const completo = r => r.comando ? `${r.comando} ${curto(r.infracao)} | ${r.codigo}` : "";
+const comAlvo = t => { const a = document.getElementById("alvo").value.trim(); return a ? t.replace(/\[(nick|ID)\]|\{ID\}/g, a) : t; };
 const chip = c => `<button type="button" class="chip" data-c="${esc(c)}" aria-label="Copiar ${esc(c)}">${esc(c)}</button>`;
 const nocmd = '<span class="nocmd">Pedir a um superior</span>';
 
@@ -167,7 +174,7 @@ document.getElementById("sections").innerHTML = SECOES.map(s => `
       <thead><tr><th>Infração</th><th>Código</th><th>${esc(s.coluna)}</th><th>Comando</th></tr></thead>
       <tbody>${s.linhas.map(r => `<tr data-k="${esc((r.infracao+" "+r.codigo).toLowerCase())}">
         <td>${esc(r.infracao)}</td><td class="code">${esc(r.codigo)}</td><td class="pun">${esc(r.punicao)}</td>
-        <td>${r.comando ? chip(r.comando) : nocmd}</td></tr>`).join("")}
+        <td>${r.comando ? chip(completo(r)) : nocmd}</td></tr>`).join("")}
       <tr class="none" hidden><td colspan="4" class="empty">Nada encontrado nesta seção.</td></tr></tbody>
     </table></div>
   </section>`).join("");
@@ -180,10 +187,14 @@ document.getElementById("avisos").innerHTML =
 
 document.addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b) return;
-  const t = b.dataset.c;
-  const done = () => { b.classList.add("ok"); b.textContent = "Copiado!"; setTimeout(() => { b.classList.remove("ok"); b.textContent = t; }, 1100); };
+  const t = comAlvo(b.dataset.c);
+  const done = () => { b.classList.add("ok"); b.textContent = "Copiado!"; setTimeout(() => { b.classList.remove("ok"); b.textContent = comAlvo(b.dataset.c); }, 1100); };
   const sel = () => { const r = document.createRange(); r.selectNodeContents(b); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
   try { navigator.clipboard.writeText(t).then(done, sel); } catch (_) { sel(); }
+});
+
+document.getElementById("alvo").addEventListener("input", () => {
+  document.querySelectorAll(".chip").forEach(c => { if (!c.classList.contains("ok")) c.textContent = comAlvo(c.dataset.c); });
 });
 
 const dlg = document.getElementById("manual");
