@@ -56,6 +56,17 @@ td.pun{font-variant-numeric:tabular-nums}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:13px;text-align:center}
 header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.montar{background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.montar h2{font-family:var(--display);font-size:20px;margin:0;letter-spacing:.04em}
+.montar .campos{display:flex;gap:10px;flex-wrap:wrap}
+.montar input,.montar select{flex:1 1 220px;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:inherit}
+.montar input:focus,.montar select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.resultado{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#cmdPronto{flex:1 1 260px;min-width:0;font-family:var(--mono);font-weight:700;font-size:15px;background:var(--accent-soft);border:1px dashed var(--accent);border-radius:10px;padding:11px 12px;word-break:break-word}
+#cmdPronto.vazio{color:var(--muted);font-weight:500;font-family:var(--body);font-size:14px}
+#copiarPronto{font:600 15px var(--body);color:var(--fg);background:var(--accent);border:0;border-radius:10px;padding:11px 20px;cursor:pointer}
+#copiarPronto:disabled{opacity:.45;cursor:default}
+#copiarPronto:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .abas{display:flex;gap:6px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .aba{font:600 15px var(--body);color:var(--muted);background:transparent;border:0;border-bottom:3px solid transparent;padding:10px 16px;cursor:pointer;margin-bottom:-1px}
 .aba[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
@@ -97,18 +108,24 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 
       <h3>Achar uma infração</h3>
       <ol>
-        <li>Digite na <b>barra de busca</b> o nome ou o código. Ex.: <code>VDM</code>, <code>4.3</code>, <code>flood</code>.</li>
+        <li>Digite na <b>barra de busca</b> a sigla, o código ou o que aconteceu, mesmo sem saber a sigla. Ex.: <code>VDM</code>, <code>4.3</code>, <code>corta caminho</code>, <code>ofensas player</code>, <code>atropelar</code>.</li>
         <li>Só as linhas que batem com a busca ficam na tela.</li>
         <li>Toque no <b>nome da infração</b> (ex.: <b>CC ▾</b>) para abrir o <b>significado</b> da sigla embaixo. Toque de novo para fechar.</li>
         <li>Ou toque em <b>Kicks · Prisões · Mutes · Banimentos · Apoio</b> para pular direto para a seção.</li>
       </ol>
 
-      <h3>Aplicar a punição</h3>
+      <h3>Montar o comando (mais rápido)</h3>
       <ol>
-        <li>Se quiser, digite o <b>nick ou ID do jogador</b> no campo de cima. Ele entra sozinho em todos os comandos.</li>
+        <li>No quadro <b>Montar comando</b>, digite o <b>nick ou ID do jogador</b>.</li>
+        <li>Escolha a <b>infração</b> na lista.</li>
+        <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
+      </ol>
+
+      <h3>Ou copiar direto da tabela</h3>
+      <ol>
         <li>Toque no <b>comando azul</b> da linha. Ele é copiado já com a infração e o código do artigo, e aparece "Copiado!".</li>
-        <li>Cole no jogo. Se não digitou o nick antes, troque <code>[nick]</code> ou <code>[ID]</code> pelo do jogador.</li>
-        <li>Exemplo: <code>/jail Ruby_magela VDM | 4.3</code></li>
+        <li>Cole no jogo e troque <code>[nick]</code> ou <code>[ID]</code> pelo do jogador.</li>
+        <li>Exemplo: <code>/jail ADM_Amora VDM | 4.3</code></li>
         <li>Use o tempo que está na coluna <b>Punição / Tempo</b>.</li>
       </ol>
 
@@ -137,10 +154,20 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
   </div>
 
   <div class="vista" id="vista-tabela">
+  <section class="montar" aria-labelledby="montarTit">
+    <h2 id="montarTit">Montar comando</h2>
+    <div class="campos">
+      <input id="jogador" type="text" placeholder="Nick ou ID do jogador" aria-label="Nick ou ID do jogador" autocomplete="off">
+      <select id="infracaoSel" aria-label="Infração"></select>
+    </div>
+    <div class="resultado">
+      <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
+      <button type="button" id="copiarPronto" disabled>Copiar</button>
+    </div>
+  </section>
 
   <div class="tools">
-    <input id="q" type="search" placeholder="Buscar infração ou código (ex.: VDM, 4.3, flood)" aria-label="Buscar infração">
-    <input id="alvo" type="text" placeholder="Nick ou ID do jogador (opcional)" aria-label="Nick ou ID do jogador" autocomplete="off">
+    <input id="q" type="search" placeholder="Buscar por sigla, código ou nome (ex.: VDM, 4.3, corta caminho)" aria-label="Buscar infração">
     <nav class="jump" id="jump" aria-label="Seções"></nav>
   </div>
 
@@ -168,7 +195,7 @@ const curto = n => n.replace(/\s*\(.*?\)\s*/g, " ").trim();
 const SIG = (typeof SIGNIFICADOS !== "undefined") ? SIGNIFICADOS : {};
 const signif = r => SIG[r.infracao] || SIG[curto(r.infracao)] || "";
 const completo = r => r.comando ? `${r.comando} ${curto(r.infracao)} | ${r.codigo}` : "";
-const comAlvo = t => { const a = document.getElementById("alvo").value.trim(); return a ? t.replace(/\[(nick|ID)\]|\{ID\}/g, a) : t; };
+const comAlvo = t => t;
 const chip = c => `<button type="button" class="chip" data-c="${esc(c)}" aria-label="Copiar ${esc(c)}">${esc(c)}</button>`;
 const nocmd = '<span class="nocmd">Pedir a um superior</span>';
 
@@ -203,14 +230,33 @@ document.addEventListener("click", e => {
   try { navigator.clipboard.writeText(t).then(done, sel); } catch (_) { sel(); }
 });
 
-document.getElementById("alvo").addEventListener("input", () => {
-  document.querySelectorAll(".chip").forEach(c => { if (!c.classList.contains("ok")) c.textContent = comAlvo(c.dataset.c); });
-});
 
 document.addEventListener("click", e => {
   const n = e.target.closest(".nome"); if (!n) return;
   const s = n.nextElementSibling, abrir = s.hidden;
   s.hidden = !abrir; n.setAttribute("aria-expanded", abrir);
+});
+
+const selInf = document.getElementById("infracaoSel");
+const LISTA = [];
+selInf.innerHTML = '<option value="">Escolha a infração...</option>' + SECOES.map(s => {
+  const ops = s.linhas.filter(r => r.comando).map(r => { LISTA.push(r); return `<option value="${LISTA.length - 1}">${esc(r.infracao)} · ${esc(r.codigo)} · ${esc(r.punicao)}</option>`; }).join("");
+  return ops ? `<optgroup label="${esc(s.titulo)}">${ops}</optgroup>` : "";
+}).join("");
+const jogador = document.getElementById("jogador"), pronto = document.getElementById("cmdPronto"), copiar = document.getElementById("copiarPronto");
+function montar() {
+  const r = LISTA[selInf.value], n = jogador.value.trim();
+  if (!r) { pronto.textContent = "Digite o nick e escolha a infração"; pronto.className = "vazio"; copiar.disabled = true; return; }
+  const t = completo(r);
+  pronto.textContent = n ? t.replace(/\[(nick|ID)\]|\{ID\}/g, n) : t;
+  pronto.className = ""; copiar.disabled = false;
+}
+jogador.addEventListener("input", montar); selInf.addEventListener("change", montar);
+copiar.addEventListener("click", () => {
+  const t = pronto.textContent;
+  const ok = () => { copiar.textContent = "Copiado!"; setTimeout(() => copiar.textContent = "Copiar", 1100); };
+  const sel = () => { const r = document.createRange(); r.selectNodeContents(pronto); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+  try { navigator.clipboard.writeText(t).then(ok, sel); } catch (_) { sel(); }
 });
 
 function mostrar(v) {
@@ -225,11 +271,12 @@ if (location.hash === "#manual") mostrar("manual");
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 document.getElementById("q").addEventListener("input", e => {
-  const q = norm(e.target.value.trim());
+  const palavras = norm(e.target.value.trim()).split(/\s+/).filter(p => p.length > 2 || /\d/.test(p));
+  const q = palavras.length ? " " : "";
   document.querySelectorAll("#sections section").forEach(sec => {
     let n = 0;
     sec.querySelectorAll("tbody tr[data-k]").forEach(tr => {
-      const show = !q || norm(tr.dataset.k).includes(q); tr.hidden = !show; if (show) n++;
+      const k = norm(tr.dataset.k); const show = !q || palavras.every(p => k.includes(p)); tr.hidden = !show; if (show) n++;
     });
     sec.querySelector("tr.none").hidden = n > 0;
   });
