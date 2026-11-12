@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Admin Amora">
 <title>Punições e Comandos SV04</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#060d1c">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="icone-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tabela SV04">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Para mudar punições, edite o arquivo dados.js (não precisa mexer aqui). */
@@ -93,6 +100,19 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .man-body code{font-family:var(--mono);background:var(--accent-soft);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
 .man-body .warn{color:var(--warn)}
 </style>
+<style>
+#instalar{font:600 14px var(--body);color:var(--fg);background:var(--accent);border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+/* Modo compacto: janela flutuante pequena */
+@media (max-height: 560px), (max-width: 360px) {
+  header{display:none!important}
+  .wrap{padding-block:8px 24px;gap:12px}
+  .montar{padding:10px 12px;gap:8px}
+  .montar h2{font-size:16px}
+  .montar input,.montar select,#cmdPronto{padding:8px 10px;font-size:14px}
+  #copiarPronto{padding:8px 14px}
+  .aba{padding:8px 10px;font-size:13px}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -101,6 +121,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
       <h1>Punições <span>+</span> Comandos <span>SV04</span></h1>
       <p>Rio Rise RP · Admin Level 1 · toque no comando para copiar</p>
     </div>
+    <button type="button" id="instalar" hidden>📲 Instalar app</button>
   </header>
 
   <nav class="abas" role="tablist" aria-label="Páginas">
@@ -149,6 +170,20 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 
       <h3>Quando tem mais de um tempo</h3>
       <p>Ex.: <code>60 min / 1 a 5 dias</code>. O primeiro tempo é para a primeira vez; os seguintes são para reincidência. No <b>PvP</b>: 1ª vez 60 min, 2ª vez 120 min, 3ª vez ban de 3 dias. Em Zona Segura é ban direto de 3 dias.</p>
+
+      <h3>Instalar como app no celular</h3>
+      <ol>
+        <li><b>Android:</b> abra o site no Chrome e toque em <b>📲 Instalar app</b> no topo. Se o botão não aparecer, toque nos <b>3 pontinhos ⋮</b> → <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li>
+        <li><b>iPhone:</b> abra no Safari, toque em <b>Compartilhar</b> (quadrado com seta) → <b>Adicionar à Tela de Início</b>.</li>
+        <li>O ícone <b>Tabela SV04</b> aparece junto com os outros apps e abre sem a barra do navegador. Funciona mesmo sem internet, com a última versão salva.</li>
+      </ol>
+
+      <h3>Usar flutuando por cima do jogo (Android)</h3>
+      <ol>
+        <li>Abra o app <b>Tabela SV04</b> e depois o jogo.</li>
+        <li>Abra os <b>apps recentes</b>, toque no ícone do Tabela SV04 em cima da janelinha e escolha <b>Abrir em janela pop-up</b> / <b>Janela flutuante</b> (o nome muda conforme a marca).</li>
+        <li>A tabela fica por cima do jogo. Em janela pequena ela entra sozinha no <b>modo compacto</b>. Dá para minimizar numa bolinha no canto e tocar quando precisar.</li>
+      </ol>
 
       <h3>Regras importantes</h3>
       <ul>
@@ -327,6 +362,16 @@ document.getElementById("q").addEventListener("input", e => {
     sec.querySelector("tr.none").hidden = n > 0;
   });
 });
+</script>
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+let pedidoInstalar = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); pedidoInstalar = e; document.getElementById("instalar").hidden = false; });
+document.getElementById("instalar").addEventListener("click", async () => {
+  if (!pedidoInstalar) return; pedidoInstalar.prompt(); await pedidoInstalar.userChoice; pedidoInstalar = null;
+  document.getElementById("instalar").hidden = true;
+});
+window.addEventListener("appinstalled", () => { document.getElementById("instalar").hidden = true; });
 </script>
 </body>
 </html>
