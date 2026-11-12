@@ -121,8 +121,9 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
       <h1>App para ADM <span>Rio Rise</span></h1>
       <p>Punições e comandos · Admin Level 1 · toque no comando para copiar</p>
     </div>
-    <button type="button" id="instalar" hidden>📲 Instalar app</button>
+    <button type="button" id="instalar">📲 Baixar app Rio Rise</button>
   </header>
+  <div id="comoInstalar" class="note" hidden></div>
 
   <nav class="abas" role="tablist" aria-label="Páginas">
     <button type="button" class="aba" role="tab" id="aba-tabela" data-v="tabela" aria-selected="true">Tabela</button>
@@ -366,10 +367,18 @@ document.getElementById("q").addEventListener("input", e => {
 <script>
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 let pedidoInstalar = null;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); pedidoInstalar = e; document.getElementById("instalar").hidden = false; });
-document.getElementById("instalar").addEventListener("click", async () => {
-  if (!pedidoInstalar) return; pedidoInstalar.prompt(); await pedidoInstalar.userChoice; pedidoInstalar = null;
-  document.getElementById("instalar").hidden = true;
+const btnInst = document.getElementById("instalar"), como = document.getElementById("comoInstalar");
+if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) btnInst.hidden = true;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); pedidoInstalar = e; });
+btnInst.addEventListener("click", async () => {
+  if (pedidoInstalar) { pedidoInstalar.prompt(); const r = await pedidoInstalar.userChoice; pedidoInstalar = null; if (r.outcome === "accepted") btnInst.hidden = true; return; }
+  const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/i.test(ua), android = /Android/i.test(ua);
+  como.innerHTML = ios
+    ? "<b>Para baixar no iPhone:</b> abra este site no <b>Safari</b>, toque em <b>Compartilhar</b> (quadrado com seta para cima) e depois em <b>Adicionar à Tela de Início</b>."
+    : android
+    ? "<b>Para baixar no Android:</b> abra este site no <b>Chrome</b>, toque nos <b>3 pontinhos ⋮</b> no canto de cima e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>. Se já tiver instalado, procure o ícone <b>ADM Rio Rise</b> nos seus apps."
+    : "<b>Para baixar no computador:</b> no Chrome, clique no ícone de instalar (tela com seta) no fim da barra de endereço, ou nos <b>3 pontinhos ⋮</b> → <b>Transmitir, salvar e compartilhar</b> → <b>Instalar página como app</b>.";
+  como.hidden = !como.hidden;
 });
 window.addEventListener("appinstalled", () => { document.getElementById("instalar").hidden = true; });
 </script>
