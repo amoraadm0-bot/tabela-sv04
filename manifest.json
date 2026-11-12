@@ -1,7 +1,7 @@
 {
-  "name": "Punições e Comandos SV04",
-  "short_name": "Tabela SV04",
-  "description": "Tabela de punições e comandos do SV04 - Admin Amora",
+  "name": "App para ADM Rio Rise",
+  "short_name": "ADM Rio Rise",
+  "description": "Tabela de punições e comandos para ADM Rio Rise - Admin Amora",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

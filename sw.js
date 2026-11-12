@@ -1,5 +1,5 @@
-/* App da Tabela SV04: busca sempre a versão nova; sem internet, usa a última salva. */
-const CACHE = "tabela-sv04-v1";
+/* App ADM Rio Rise: busca sempre a versão nova; sem internet, usa a última salva. */
+const CACHE = "adm-riorise-v2";
 const BASE = ["./", "index.html", "dados.js", "manifest.json", "icone-192.png", "icone-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
