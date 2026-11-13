@@ -83,6 +83,8 @@ body.travado{overflow:hidden}
 .g-card input{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:16px var(--body)}
 .g-card input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .g-msg{margin:0;color:var(--danger);font-size:14px;min-height:1em}
+.g-codigo{display:flex;flex-direction:column;gap:8px;background:var(--row);border:1px solid var(--warn);border-radius:12px;padding:12px}
+.g-cod-val{font:700 24px var(--mono);letter-spacing:.12em;text-align:center;color:var(--warn);padding:6px;user-select:all}
 #quemTopo{font-size:13px;color:var(--muted);align-self:center}
 .link-sair{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
 .rel-sec{font-family:var(--display);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:6px 0 0}
@@ -175,8 +177,16 @@ body.travado{overflow:hidden}
     </div>
     <label>Nome de ADM<input id="gNome" type="text" autocomplete="username" placeholder="ex.: ADM Amora"></label>
     <label>Senha<input id="gSenha" type="password" autocomplete="current-password"></label>
+    <label id="gCodBox" hidden>Código de recuperação<input id="gCod" type="text" autocomplete="off" placeholder="XXXX-XXXX" style="text-transform:uppercase;font-family:var(--mono)"></label>
     <label id="gSenha2Box" hidden>Repita a senha<input id="gSenha2" type="password" autocomplete="new-password"></label>
     <button type="button" id="gEntrar" class="btn-copiar" style="width:100%">Entrar</button>
+    <button type="button" id="gEsqueci" class="link-sair" style="align-self:center">Esqueci a senha</button>
+    <div id="gCodigoNovo" class="g-codigo" hidden>
+      <b>Guarde o seu código de recuperação</b>
+      <p class="dica-log">Se esquecer a senha, é com ele que você cria uma nova. Tire um print ou anote. Ele aparece só agora.</p>
+      <div class="g-cod-val" id="gCodVal"></div>
+      <div class="resultado"><button type="button" class="mini" id="gCodCopiar">📋 Copiar código</button><button type="button" class="btn-copiar" id="gCodOk">Já guardei, continuar</button></div>
+    </div>
     <p id="gMsg" class="g-msg" aria-live="polite"></p>
     <p class="dica-log">A conta fica guardada neste celular. Cada ADM cria a sua e vê só os próprios logs e relatórios.</p>
   </div>
@@ -249,6 +259,7 @@ body.travado{overflow:hidden}
       <ol>
         <li>Na primeira vez, toque em <b>Criar conta</b>, escolha o seu <b>nome de ADM</b> e uma <b>senha</b> (mínimo 4 caracteres).</li>
         <li>Nas próximas vezes, é só <b>Entrar</b> com o nome e a senha. Para trocar de ADM, toque em <b>Sair</b> no topo.</li>
+        <li>Ao criar a conta, aparece um <b>código de recuperação</b> (ex.: <code>K7PQ-M2XZ</code>). Tire um print ou anote. Se esquecer a senha, toque em <b>Esqueci a senha</b>, digite o nome, o código e a senha nova. Depois disso, aparece um código novo para guardar.</li>
         <li>A conta fica guardada no celular. Cada ADM tem a sua e vê só os próprios logs salvos. Se trocar de celular, crie a conta de novo.</li>
       </ol>
 
@@ -626,7 +637,7 @@ function desenharPerfil() {
   if (ATUAL) {
     gate.hidden = true; document.body.classList.remove("travado");
     const nome = PERFIS[ATUAL].nome;
-    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b></span><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></div>`;
+    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b></span><span class="lg-linha"><button type="button" class="mini" id="pCod">${PERFIS[ATUAL].rec ? "Novo código de recuperação" : "⚠ Criar código de recuperação"}</button><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></span></div>`;
     document.getElementById("quemTopo").innerHTML = `👤 ${esc(nome)} · <button type="button" class="link-sair" id="pSair2">Sair</button>`;
     elSalvos.hidden = false; desenharSalvos();
     const ap = document.getElementById("lAplicador"); if (!ap.value) { ap.value = nome; atualizarLog(); }
@@ -635,38 +646,72 @@ function desenharPerfil() {
   elSalvos.hidden = true; elPerfil.innerHTML = ""; document.getElementById("quemTopo").innerHTML = "";
   gate.hidden = false; document.body.classList.add("travado");
 }
+const ALFA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const gerarCodigo = () => { const r = crypto.getRandomValues(new Uint8Array(8)); const s = [...r].map(x => ALFA[x % ALFA.length]).join(""); return s.slice(0, 4) + "-" + s.slice(4); };
+const hashCod = c => hashPin("rec|" + c.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+let entrarDepois = null;
+function mostrarCodigo(cod, depois) {
+  document.getElementById("gCodVal").textContent = cod;
+  document.getElementById("gCodigoNovo").hidden = false;
+  document.querySelectorAll("#gate .g-card > :not(#gCodigoNovo):not(img):not(.g-tit)").forEach(el => el.dataset.escondido = el.hidden ? "1" : "", );
+  document.querySelectorAll("#gate .g-card > :not(#gCodigoNovo):not(img):not(.g-tit)").forEach(el => el.hidden = true);
+  entrarDepois = depois;
+  document.getElementById("gate").hidden = false; document.body.classList.add("travado");
+}
+document.getElementById("gCodCopiar").addEventListener("click", () => { try { navigator.clipboard.writeText(document.getElementById("gCodVal").textContent).catch(() => {}); } catch (_) {} document.getElementById("gCodCopiar").textContent = "Copiado!"; });
+document.getElementById("gCodOk").addEventListener("click", () => {
+  document.getElementById("gCodigoNovo").hidden = true;
+  document.querySelectorAll("#gate .g-card > :not(#gCodigoNovo):not(img):not(.g-tit)").forEach(el => el.hidden = el.dataset.escondido === "1");
+  document.getElementById("gCodCopiar").textContent = "📋 Copiar código";
+  const f = entrarDepois; entrarDepois = null; if (f) f(); else desenharPerfil();
+});
 function modoGate(m) {
   document.querySelectorAll("#gate .g-aba").forEach(b => b.setAttribute("aria-selected", b.dataset.m === m));
-  document.getElementById("gSenha2Box").hidden = m !== "criar";
-  document.getElementById("gEntrar").textContent = m === "criar" ? "Criar conta" : "Entrar";
-  document.getElementById("gSenha").autocomplete = m === "criar" ? "new-password" : "current-password";
-  document.getElementById("gMsg").textContent = "";
+  document.getElementById("gSenha2Box").hidden = m === "entrar";
+  document.getElementById("gCodBox").hidden = m !== "recuperar";
+  document.getElementById("gEsqueci").hidden = m !== "entrar";
+  document.getElementById("gEntrar").textContent = m === "criar" ? "Criar conta" : m === "recuperar" ? "Criar senha nova" : "Entrar";
+  document.getElementById("gSenha").previousSibling.textContent = m === "recuperar" ? "Senha nova" : "Senha";
+  document.getElementById("gSenha").autocomplete = m === "entrar" ? "current-password" : "new-password";
+  document.getElementById("gMsg").textContent = m === "recuperar" ? "" : "";
   document.getElementById("gate").dataset.modo = m;
 }
 document.querySelectorAll("#gate .g-aba").forEach(b => b.addEventListener("click", () => modoGate(b.dataset.m)));
+document.getElementById("gEsqueci").addEventListener("click", () => modoGate("recuperar"));
 async function gateEnviar() {
-  const g = document.getElementById("gate"), msg = document.getElementById("gMsg");
+  const g = document.getElementById("gate"), msg = document.getElementById("gMsg"), modo = g.dataset.modo;
   const nome = document.getElementById("gNome").value.trim(), s1 = document.getElementById("gSenha").value, s2 = document.getElementById("gSenha2").value;
   const erro = t => { msg.textContent = t; };
   if (!nome) return erro("Digite o seu nome de ADM.");
   if (s1.length < 4) return erro("A senha precisa ter pelo menos 4 caracteres.");
   const k = chaveP(nome), p = PERFIS[k];
-  if (g.dataset.modo === "criar") {
+  const entrar = () => { ["gSenha", "gSenha2", "gCod"].forEach(id => document.getElementById(id).value = ""); msg.textContent = ""; ATUAL = k; gravarJ("adm_atual", k); desenharPerfil(); };
+  if (modo === "criar") {
     if (p && p.pin) return erro("Já existe uma conta com esse nome neste celular. Toque em Entrar.");
     if (s1 !== s2) return erro("As duas senhas não estão iguais.");
-    PERFIS[k] = { nome, pin: await hashPin(s1), logs: p ? p.logs : [] };
+    const cod = gerarCodigo();
+    PERFIS[k] = { nome, pin: await hashPin(s1), rec: await hashCod(cod), logs: p ? p.logs : [] };
     if (!gravarJ("adm_perfis", PERFIS)) return erro("Este navegador não deixa salvar. Abra pelo app instalado ou pelo Chrome normal (fora da aba anônima).");
-  } else {
-    if (!p) return erro("Conta não encontrada neste celular. Toque em Criar conta.");
-    if (!p.pin) { p.pin = await hashPin(s1); gravarJ("adm_perfis", PERFIS); }   // conta antiga sem senha: a primeira senha vira a senha
-    else if (p.pin !== await hashPin(s1)) return erro("Senha incorreta.");
+    return mostrarCodigo(cod, entrar);
   }
-  ["gSenha", "gSenha2"].forEach(id => document.getElementById(id).value = "");
-  ATUAL = k; gravarJ("adm_atual", k); desenharPerfil();
+  if (modo === "recuperar") {
+    if (!p) return erro("Conta não encontrada neste celular.");
+    if (!p.rec) return erro("Essa conta não tem código de recuperação. Peça para a liderança ou crie outra conta com outro nome.");
+    if (await hashCod(document.getElementById("gCod").value) !== p.rec) return erro("Código de recuperação errado.");
+    if (s1 !== s2) return erro("As duas senhas não estão iguais.");
+    const cod = gerarCodigo();
+    p.pin = await hashPin(s1); p.rec = await hashCod(cod); gravarJ("adm_perfis", PERFIS);
+    return mostrarCodigo(cod, entrar);   // o código antigo deixa de valer; mostra um novo
+  }
+  if (!p) return erro("Conta não encontrada neste celular. Toque em Criar conta.");
+  if (!p.pin) { p.pin = await hashPin(s1); gravarJ("adm_perfis", PERFIS); }
+  else if (p.pin !== await hashPin(s1)) return erro("Senha incorreta. Se esqueceu, toque em Esqueci a senha.");
+  entrar();
 }
 document.getElementById("gEntrar").addEventListener("click", gateEnviar);
-["gNome", "gSenha", "gSenha2"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") gateEnviar(); }));
-document.addEventListener("click", e => {
+["gNome", "gSenha", "gSenha2", "gCod"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") gateEnviar(); }));
+document.addEventListener("click", async e => {
+  if (e.target.id === "pCod" && ATUAL) { const cod = gerarCodigo(); PERFIS[ATUAL].rec = await hashCod(cod); gravarJ("adm_perfis", PERFIS); mostrarCodigo(cod, null); return; }
   if (e.target.id !== "pSair" && e.target.id !== "pSair2") return;
   ATUAL = null; gravarJ("adm_atual", null); modoGate("entrar"); desenharPerfil();
 });
