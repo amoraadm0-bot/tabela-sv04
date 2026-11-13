@@ -124,6 +124,7 @@ body[data-aba="chat"] .btn-compacto{display:none!important}
 .uni[data-u="dias"][aria-checked="true"]{background:var(--coral);color:#2a0a0a}
 .uni[data-u="perm"][aria-checked="true"]{background:#b02a37;color:#fff}
 .atalhos{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+[data-bpt].ativo{background:var(--violet);color:#fff;border-color:var(--violet)}
 .at{font:600 13px var(--body);color:var(--fg);background:var(--row);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
 .at[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-soft)}
 .aviso-nivel{font-size:12px;color:var(--warn)}
@@ -459,7 +460,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <button type="button" class="sug" data-chat-ex="id 18 vdm">id 18 vdm</button>
       <button type="button" class="sug" data-chat-ex="o que é rpfw">o que é rpfw</button>
       <button type="button" class="sug" data-chat-ex="o jogador saiu do jogo na ação">saiu do jogo na ação</button>
-      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button>
+      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button><button type="button" class="sug" data-chat-ex="bp">⏱️ bate-ponto</button>
       <button type="button" class="sug" data-chat-ex="cr">cr (ver relatório)</button>
       <button type="button" class="sug" data-chat-ex="regras de família">regras de família</button>
       <button type="button" class="sug" data-chat-ex="regras das facções">regras das facções</button>
@@ -518,6 +519,37 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   </section>
   </div>
   <div class="vista" id="vista-relatorio" hidden>
+  <section class="montar" aria-labelledby="bpTit">
+    <h2 id="bpTit">⏱️ Bate-ponto (quando sair do turno)</h2>
+    <p class="dica-log">Já vem quase tudo preenchido: turno e horário pelo relógio, seu nick pela conta, líder e ADMs do relatório. Confira e toque em copiar.</p>
+    <details class="dica-log"><summary><b>Como preencher (regras do canal)</b></summary>
+      <ul style="margin:6px 0 0 18px;padding:0">
+        <li>Mande <b>ao terminar o turno</b> (é o bate-ponto de finalização), no canal 🕛 bate-ponto.</li>
+        <li>Os turnos são de <b>3 horas</b>: 00h–03h, 03h–06h, 06h–09h, 09h–12h, 12h–15h, 15h–18h, 18h–21h, 21h–00h.</li>
+        <li>Marque só <b>um</b> turno: <b>Madrugada</b> 00h–06h · <b>Manhã</b> 06h–12h · <b>Tarde</b> 12h–18h · <b>Noite</b> 18h–00h.</li>
+        <li><b>Líder de turno</b>: quem liderou o seu turno. <b>Meu nick</b>: você. <b>Administradores</b>: todos os ADMs que estavam no turno (você também). <b>Comunicar</b>: líder do S04 e o ADMIN responsável.</li>
+        <li>Antes, no canal ⏱️ bate-ponto do robô: <b>Cadastrar turno</b> e escolher o horário. Ao <b>iniciar turno ou extra</b>, espere a confirmação que o robô manda no privado e confirme em até <b>10 minutos</b>, senão não conta.</li>
+        <li>Só conta o tempo online de verdade no jogo. Não coloque horário em que não estava.</li>
+      </ul></details>
+    <div id="bpCampos" class="log-grid">
+      <label class="lg-full">Turno<span class="lg-linha" id="bpTurnos">
+        <button type="button" class="mini" data-bpt="Manhã">🌅 Manhã</button><button type="button" class="mini" data-bpt="Tarde">☀️ Tarde</button><button type="button" class="mini" data-bpt="Noite">🌙 Noite</button><button type="button" class="mini" data-bpt="Madrugada">🌌 Madrugada</button></span></label>
+      <label>Horário (começo)<input id="bIni" type="text" placeholder="18:00" autocomplete="off"></label>
+      <label>Horário (fim)<input id="bFim" type="text" placeholder="21:00" autocomplete="off"></label>
+      <label>Líder de turno<input id="bLider" type="text" placeholder="ex.: @ASSIST⁰⁴ | Amora" autocomplete="off"></label>
+      <label>Meu nick<input id="bNick" type="text" autocomplete="off"></label>
+      <label>Data do bater ponto<span class="lg-linha"><input id="bData" type="text" autocomplete="off"><button type="button" class="mini" id="bHoje">Hoje</button></span></label>
+      <label class="lg-full">Administradores no meu turno<textarea id="bAdms" rows="2" placeholder="um por linha"></textarea></label>
+      <label class="lg-full">Comunicar<textarea id="bComunicar" rows="2"></textarea></label>
+    </div>
+    <label class="lg-lab">Bate-ponto pronto<textarea id="bpPronto" rows="9" readonly></textarea></label>
+    <div class="resultado">
+      <a id="bpDc" class="btn-copiar" href="https://discord.com/channels/1286404288708477050/1397079990369259661" target="_blank" rel="noopener" style="text-decoration:none">📤 Copiar e abrir no Discord</a>
+      <button type="button" class="mini" id="bpCopiar">Só copiar</button>
+      <button type="button" class="mini" id="bpAuto">↻ Preencher de novo automático</button>
+    </div>
+    <p class="dica-log" id="bpAviso" hidden>Bate-ponto copiado! No canal 🕐 bate-ponto, toque e segure na caixa de mensagem → <b>Colar</b> e envie.</p>
+  </section>
   <section class="montar" aria-labelledby="relTit">
     <h2 id="relTit">Relatório de turno</h2>
     <p class="dica-log">Preencha durante o turno. Fica salvo sozinho neste celular até você tocar em "Começar novo relatório".</p>
@@ -1086,12 +1118,98 @@ function comandoCR(resto) {
   const obs = REL_CAMPOS.find(c => c.id === "rObs"); gravarCampo(obs, resto.trim());
   msgChat(`✅ Anotado em <b>Observação do turno</b>. <span class="dica-log">(Para outro campo, comece com o nome dele: <i>cr hp …</i>, <i>cr pf …</i>, <i>cr roxos …</i>)</span>`);
 }
+
+// ⏱️ BATE-PONTO
+const B_IDS = ["bIni","bFim","bLider","bNick","bData","bAdms","bComunicar"];
+let bTurno = "";
+const bv = id => document.getElementById(id).value.trim();
+const turnoPelaHora = h => h >= 6 && h < 12 ? "Manhã" : h >= 12 && h < 18 ? "Tarde" : h >= 18 ? "Noite" : "Madrugada";
+function marcarTurno(t) { bTurno = t; document.querySelectorAll("[data-bpt]").forEach(b => b.classList.toggle("ativo", b.dataset.bpt === t)); }
+function textoBP() {
+  const x = nome => bTurno === nome ? " X " : " ";
+  const lin = id => bv(id).split(/\n|;\s*/).map(s => s.trim()).filter(Boolean).join("\n");
+  return `**ESCALA DE TURNO — ADMINISTRAÇÃO SERVIDOR 04 🐬**
+
+🕕 TURNO: Manhã (${x("Manhã")}) Tarde (${x("Tarde")}) Noite (${x("Noite")}) madrugada (${x("Madrugada")})
+
+⏰ Horário: ${bv("bIni")} às ${bv("bFim")}
+
+👑 Líder de Turno: ${bv("bLider")}
+
+🧑‍💻 Meu Nick: ${bv("bNick")}
+
+📝 Data do bater ponto:
+${bv("bData")}
+
+👥 Administradores no meu turno:
+${lin("bAdms")}
+
+📢 Comunicar:
+${lin("bComunicar")}`;
+}
+function atualizarBP() {
+  document.getElementById("bpPronto").value = textoBP();
+  try { const o = { turno: bTurno }; B_IDS.forEach(id => o[id] = document.getElementById(id).value); localStorage.setItem("adm_bateponto", JSON.stringify(o)); } catch (_) {}
+}
+function autoBP(forcar) {
+  const d = new Date(), h = d.getHours(), set = (id, v) => { const el = document.getElementById(id); if (forcar || !el.value.trim()) el.value = v; };
+  // turnos fixos de 3 h (00-03, 03-06 … 21-00). Saindo até 40 min depois do fim, vale o bloco que acabou.
+  const minDia = h * 60 + d.getMinutes(); let bloco = Math.floor(minDia / 180); if (minDia % 180 <= 40) bloco = (bloco + 7) % 8;
+  const hi = bloco * 3, hf = (hi + 3) % 24;
+  if (forcar || !bTurno) marcarTurno(turnoPelaHora(hi));
+  const ini = String(hi).padStart(2, "0") + ":00", fim = String(hf).padStart(2, "0") + ":00";
+  set("bFim", fim); set("bIni", ini);
+  set("bData", hoje());
+  if (typeof ATUAL !== "undefined" && ATUAL && PERFIS[ATUAL]) set("bNick", "@" + PERFIS[ATUAL].nome);
+  set("bLider", rv("rLider") ? (rv("rLider").startsWith("@") ? rv("rLider") : "@" + rv("rLider")) : "");
+  set("bAdms", rv("rAdms") || bv("bNick"));
+  set("bComunicar", rv("rComunicar") || "@LÍDER S04 | Joker\n@ADMIN⁰⁴ | Safira");
+  atualizarBP();
+}
+document.getElementById("bpCampos").addEventListener("input", atualizarBP);
+document.querySelectorAll("[data-bpt]").forEach(b => b.addEventListener("click", () => { marcarTurno(b.dataset.bpt); atualizarBP(); }));
+document.getElementById("bHoje").addEventListener("click", () => { document.getElementById("bData").value = hoje(); atualizarBP(); });
+document.getElementById("bpAuto").addEventListener("click", () => autoBP(true));
+const copiarBP = () => { try { navigator.clipboard.writeText(textoBP()).catch(() => {}); } catch (_) {} };
+document.getElementById("bpDc").addEventListener("click", () => { copiarBP(); const a = document.getElementById("bpAviso"); a.hidden = false; setTimeout(() => a.hidden = true, 8000); });
+document.getElementById("bpCopiar").addEventListener("click", () => { copiarBP(); const b = document.getElementById("bpCopiar"); b.textContent = "Copiado!"; setTimeout(() => b.textContent = "Só copiar", 1100); });
+setTimeout(() => {
+try { const o = JSON.parse(localStorage.getItem("adm_bateponto") || "{}"); if (o.bData && o.bData !== hoje()) { /* outro dia: recomeça */ } else { B_IDS.forEach(id => { if (o[id]) document.getElementById(id).value = o[id]; }); if (o.turno) marcarTurno(o.turno); } } catch (_) {}
+autoBP(false);
+}, 0);
+function cartaoBP() {
+  autoBP(false); const t = textoBP();
+  return `<div class="chat-card" style="--c:var(--violet)">
+    <div class="duv-top"><b>⏱️ Bate-ponto</b><span>${esc(bv("bData"))}</span></div>
+    <pre class="rel-pre">${esc(t)}</pre>
+    <div class="resultado">
+      <button type="button" class="btn-copiar" data-copiar="${esc(t)}" style="padding:8px 14px;font-size:14px">Copiar</button>
+      <a class="btn-copiar" data-bp-dc href="https://discord.com/channels/1286404288708477050/1397079990369259661" target="_blank" rel="noopener" style="text-decoration:none;padding:8px 14px;font-size:14px;background:var(--discord)">📤 Abrir canal</a>
+      <button type="button" class="mini" data-bp-aba>✏️ Abrir na aba</button>
+    </div></div>`;
+}
+function comandoBP(resto) {
+  const r = resto.trim(), n = normA(r);
+  const mH = n.match(/^(?:horario|hora|h)?\s*(\d{1,2})(?::?(\d{2}))?h?\s*(?:as|a|-|ate)?\s*(\d{1,2})(?::?(\d{2}))?h?$/);
+  const p2 = v => String(v).padStart(2, "0");
+  if (mH) { document.getElementById("bIni").value = p2(+mH[1] % 24) + ":" + (mH[2] || "00"); document.getElementById("bFim").value = p2(+mH[3] % 24) + ":" + (mH[4] || "00"); marcarTurno(turnoPelaHora(+mH[1] % 24)); }
+  else if (/^(manha|tarde|noite|madrugada|madruga)$/.test(n)) marcarTurno({ manha: "Manhã", tarde: "Tarde", noite: "Noite", madrugada: "Madrugada", madruga: "Madrugada" }[n]);
+  else if (/^lider\s+eu$/.test(n) && ATUAL) document.getElementById("bLider").value = "@" + PERFIS[ATUAL].nome;
+  else if (/^lider\s+/.test(n)) document.getElementById("bLider").value = r.replace(/^\S+\s+/, "");
+  else if (/^(adms?|administradores)\s+/.test(n)) document.getElementById("bAdms").value = r.replace(/^\S+\s+/, "");
+  else if (/^(comunicar)\s+/.test(n)) document.getElementById("bComunicar").value = r.replace(/^\S+\s+/, "");
+  else if (/^(novo|auto|automatico)$/.test(n)) autoBP(true);
+  atualizarBP();
+  msgChat((r ? "✅ Pronto. " : "") + "Seu bate-ponto:" + cartaoBP() + "<p class='dica-log' style='margin-top:6px'>Ajustar: <i>bp 18 21</i> (horário) · <i>bp noite</i> · <i>bp lider eu</i> · <i>bp adms @Fulano @Ciclano</i></p>");
+}
 function responder(texto) {
   const t = texto.trim(); if (!t) return;
   msgChat(esc(t), "eu"); const n = normA(t);
   // 📝 relatório: atalho "cr" (continua relatório) funciona a qualquer momento e não mistura com o resto
   const mCR = t.match(/^(?:cr|c\.r\.?|continua\s+relat[oó]rio)(?:\s+|:|$)(.*)$/i);
   if (mCR) { comandoCR(mCR[1] || ""); return; }
+  const mBP = t.match(/^(?:bp|bate[\s-]?ponto|bater\s+(?:o\s+)?ponto|(?:quero\s+)?(?:fazer|montar)\s+(?:o\s+)?bate[\s-]?ponto)(?:\s+|:|$)(.*)$/i);
+  if (mBP) { comandoBP(mBP[1] || ""); return; }
   if (REL.guiado) { respostaGuiada(t); return; }
   if (/^(quero\s+)?(fazer|montar|come[cç]ar|abrir)?\s*(o\s+|um\s+)?relat[oó]rio(\s+de\s+turno)?$/.test(n)) {
     REL.guiado = true; REL.passo = 0;
@@ -1099,7 +1217,7 @@ function responder(texto) {
     perguntaRel(); return;
   }
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
-  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
+  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
   // regra pelo número: "regra 8.30", "artigo 4.22", "6.8 facção"
   const mNum = n.match(/\b(?:regra|artigo|art)?\s*(\d{1,2}\.\d{1,2})\b/);
   if (mNum && /(regra|artigo|art\b|^\d+\.\d+$|fac|famil|policia|hospital|exercito|midia|acao|invas)/.test(n)) {
@@ -1178,6 +1296,8 @@ chatLista.addEventListener("click", e => {
   if (op) { const card = op.closest(".chat-card"); card.outerHTML = cartaoInfracao(+op.dataset.i, CTX.id, +op.dataset.chatOp); return; }
   if (e.target.closest("[data-rel-salvar]")) { document.getElementById("relSalvar").click(); msgChat("💾 Relatório salvo em <b>Relatórios salvos</b> (aba Relatório)."); return; }
   if (e.target.closest("[data-rel-aba]")) { mostrar("relatorio"); history.replaceState(history.state, "", "#relatorio"); window.scrollTo(0, 0); return; }
+  if (e.target.closest("[data-bp-dc]")) { copiarBP(); msgChat("📋 Bate-ponto copiado. No canal 🕐 bate-ponto, cole e envie."); return; }
+  if (e.target.closest("[data-bp-aba]")) { mostrar("relatorio"); history.replaceState(history.state, "", "#relatorio"); window.scrollTo(0, 0); return; }
   if (e.target.closest("[data-rel-dc]")) { try { navigator.clipboard.writeText(textoRel()).catch(() => {}); } catch (_) {} msgChat("📋 Relatório copiado. No canal 📝 relatório-de-turno, cole e envie."); return; }
   const rg = e.target.closest("[data-regra]");
   if (rg) { const r = RC[+rg.dataset.regra]; msgChat(esc(r.n ? "regra " + r.n : "regra"), "eu"); msgChat(cartaoRegra(r)); return; }
