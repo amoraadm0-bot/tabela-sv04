@@ -70,6 +70,19 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .drv{display:flex;flex-direction:column;gap:8px}
 .drv label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .drv-bts{display:flex;gap:6px;flex-wrap:wrap}
+.drv-tit{font-size:12px;color:var(--muted)}
+.btn-anexar{font:600 15px var(--body);color:var(--fg);background:var(--row);border:1px dashed var(--amber);border-radius:12px;padding:14px;cursor:pointer;text-align:center}
+.btn-anexar:hover{background:var(--amber-soft)}
+.anexos{display:flex;flex-direction:column;gap:8px}
+.anexo{display:flex;align-items:center;gap:10px;background:var(--row);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:0}
+.anexo-prev{position:relative;width:56px;height:56px;flex:none;border-radius:8px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.anexo-prev img,.anexo-prev video{width:100%;height:100%;object-fit:cover}
+.anexo-prev .play{position:absolute;color:#fff;font-size:18px;text-shadow:0 1px 4px #000}
+.anexo-prev .doc{font-size:26px}
+.anexo-info{display:flex;flex-direction:column;min-width:0;flex:1;font-size:13px}
+.anexo-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.anexo-info span{color:var(--muted);font-size:12px}
+#compDc{background:var(--discord)!important}
 .drv-prog{height:8px;background:var(--bg);border:1px solid var(--line);border-radius:999px;overflow:hidden}
 #drvBarra{height:100%;width:0;background:var(--accent);transition:width .2s}
 .lg-escolha{width:100%;font-weight:600;color:var(--fg)}
@@ -332,13 +345,19 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <label data-campo="lRemocao" class="lg-full">Motivo da remoção<input id="lRemocao" type="text" autocomplete="off"></label>
       <label data-campo="lObs" class="lg-full">Observação<input id="lObs" type="text" autocomplete="off"></label>
       <div data-campo="lEvid" class="lg-full drv">
-        <label>Evidências (vídeo, foto ou link)<textarea id="lEvid" rows="1" placeholder="https://drive.google.com/..." autocomplete="off"></textarea></label>
+        <span class="drv-tit">Evidências (vídeo, foto, documento ou link)</span>
+        <button type="button" id="anexar" class="btn-anexar">📎 Anexar vídeo, foto ou documento</button>
+        <input id="drvArquivo" type="file" accept="video/*,image/*,application/pdf,.pdf,.doc,.docx,.txt" multiple hidden>
+        <div id="anexos" class="anexos" hidden></div>
+        <div id="anexoAcoes" class="drv-bts" hidden>
+          <button type="button" id="compDc" class="btn-copiar" style="padding:9px 14px;font-size:14px">📤 Mandar no Discord (com o log)</button>
+          <button type="button" id="drvBotao" class="btn-copiar" style="padding:9px 14px;font-size:14px">☁️ Subir no Drive e pôr o link</button>
+        </div>
+        <label>Link das evidências<textarea id="lEvid" rows="1" placeholder="https://drive.google.com/..." autocomplete="off"></textarea></label>
         <div class="drv-bts">
-          <button type="button" id="drvBotao" class="btn-copiar" style="padding:9px 14px;font-size:14px">⬆️ Enviar vídeo ou foto</button>
           <a class="mini" href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener" style="text-decoration:none">📁 Abrir Drive</a>
           <button type="button" id="drvColar" class="mini">📋 Colar link</button>
         </div>
-        <input id="drvArquivo" type="file" accept="video/*,image/*" multiple hidden>
         <div id="drvProg" class="drv-prog" hidden><div id="drvBarra"></div></div>
         <p id="drvMsg" class="dica-log" hidden></p>
       </div>
@@ -436,7 +455,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <ol>
         <li>Depois de montar o comando, toque em <b>🧾 Montar evidência desta punição →</b> (ou abra a aba <b>🧾 Montar evidência</b>). O nick, o motivo, a regra e o tempo já vêm preenchidos.</li>
         <li>Escolha o <b>modelo</b> do canal onde vai postar (ex.: Registro de Prisão / Mute, Solicito banimento IP, Punição removida).</li>
-        <li>Em <b>Evidências</b>, toque em <b>⬆️ Enviar vídeo ou foto</b>, entre com a sua conta Google e escolha um ou mais vídeos/fotos. Ele vai para a pasta <b>Evidências ADM Rio Rise</b> no <b>seu</b> Drive, o link é liberado e já entra no log sozinho. Se preferir, use <b>📁 Abrir Drive</b>, suba lá, copie o link e toque em <b>📋 Colar link</b>.</li>
+        <li>Em <b>Evidências</b>, toque em <b>📎 Anexar vídeo, foto ou documento</b>: abre a galeria/arquivos do celular, igual no WhatsApp. Os anexos aparecem na tela. Depois escolha: <b>📤 Mandar no Discord (com o log)</b> abre o compartilhar do celular — escolha o Discord e o canal, e o vídeo vai junto com o log; ou <b>☁️ Subir no Drive e pôr o link</b>, que sobe no seu Drive e coloca o link no log. Também dá para usar <b>📁 Abrir Drive</b> e <b>📋 Colar link</b>.</li>
         <li>Preencha a observação se tiver e toque em <b>📤 Enviar agora</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
         <li>No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</li>
         <li><b>Está no jogo e vai mandar depois?</b> Toque em <b>💾 Salvar para enviar depois</b>. Os logs ficam em <b>Meus logs salvos</b>, separados por ADM. Depois é só tocar em <b>📤 Copiar e abrir no Discord</b> em cada um: ele copia, abre o canal certo e marca como enviado.</li>
@@ -963,12 +982,36 @@ function subirArquivo(tok, arq, pasta) {
     x.send(arq);
   });
 }
-document.getElementById("drvBotao").addEventListener("click", () => {
-  if (typeof GOOGLE_CLIENT_ID === "undefined" || !GOOGLE_CLIENT_ID) return drvMsg("O envio de vídeo ainda não foi configurado. Use <b>📁 Abrir Drive</b> e cole o link.");
-  document.getElementById("drvArquivo").click();
+/* Anexos (como no WhatsApp): escolhe da galeria/arquivos, mostra aqui e depois manda */
+let ANEXOS = [];
+const tamanho = b => b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+function desenharAnexos() {
+  const box = document.getElementById("anexos");
+  box.hidden = !ANEXOS.length; document.getElementById("anexoAcoes").hidden = !ANEXOS.length;
+  box.innerHTML = ANEXOS.map((a, i) => {
+    const prev = a.file.type.startsWith("image/") ? `<img src="${a.url}" alt="">` : a.file.type.startsWith("video/") ? `<video src="${a.url}" muted preload="metadata"></video><span class="play">▶</span>` : `<span class="doc">📄</span>`;
+    return `<div class="anexo"><div class="anexo-prev">${prev}</div><div class="anexo-info"><b>${esc(a.file.name)}</b><span>${tamanho(a.file.size)}</span></div><button type="button" class="mini perigo-mini" data-tirar="${i}" aria-label="Tirar anexo">✕</button></div>`;
+  }).join("");
+}
+document.getElementById("anexar").addEventListener("click", () => document.getElementById("drvArquivo").click());
+document.getElementById("drvArquivo").addEventListener("change", e => {
+  [...e.target.files].forEach(f => ANEXOS.push({ file: f, url: URL.createObjectURL(f) })); e.target.value = ""; desenharAnexos(); drvMsg("");
 });
-document.getElementById("drvArquivo").addEventListener("change", async e => {
-  const arqs = [...e.target.files]; e.target.value = ""; if (!arqs.length) return;
+document.getElementById("anexos").addEventListener("click", e => {
+  const b = e.target.closest("[data-tirar]"); if (!b) return;
+  const [a] = ANEXOS.splice(+b.dataset.tirar, 1); URL.revokeObjectURL(a.url); desenharAnexos();
+});
+document.getElementById("compDc").addEventListener("click", async () => {
+  const files = ANEXOS.map(a => a.file), text = document.getElementById("logPronto").value;
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try { await navigator.share({ files, text }); drvMsg("✓ Escolha o <b>Discord</b> e o canal certo. Se o texto não aparecer lá, cole: ele já está copiado."); }
+    catch (err) { if (err.name !== "AbortError") drvMsg("Não consegui abrir o compartilhamento. Use ☁️ Subir no Drive."); }
+    try { navigator.clipboard.writeText(text).catch(() => {}); } catch (_) {}
+  } else drvMsg("Este navegador não deixa mandar arquivos direto. Abra pelo app instalado no celular, ou use <b>☁️ Subir no Drive</b>.");
+});
+document.getElementById("drvBotao").addEventListener("click", async () => {
+  if (typeof GOOGLE_CLIENT_ID === "undefined" || !GOOGLE_CLIENT_ID) return drvMsg("O envio para o Drive ainda não foi configurado. Use <b>📤 Mandar no Discord</b> ou <b>📁 Abrir Drive</b> e cole o link.");
+  const arqs = ANEXOS.map(a => a.file); if (!arqs.length) return;
   const prog = document.getElementById("drvProg"), barra = document.getElementById("drvBarra"), bt = document.getElementById("drvBotao");
   bt.disabled = true; prog.hidden = false; barra.style.width = "0%";
   try {
