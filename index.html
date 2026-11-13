@@ -67,6 +67,11 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .engrenagem:hover{border-color:var(--accent)}
 .engrenagem:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dica-log{margin:0;font-size:13px;color:var(--muted)}
+.drv{display:flex;flex-direction:column;gap:8px}
+.drv label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.drv-bts{display:flex;gap:6px;flex-wrap:wrap}
+.drv-prog{height:8px;background:var(--bg);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+#drvBarra{height:100%;width:0;background:var(--accent);transition:width .2s}
 .lg-escolha{width:100%;font-weight:600;color:var(--fg)}
 #salvarLog{background:var(--accent-soft);border:1px solid var(--accent)}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:auto;padding-block:max(24px,env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -80,11 +85,13 @@ body.travado{overflow:hidden}
 .g-aba{flex:1;font:600 15px var(--body);color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:10px;cursor:pointer;margin-bottom:-1px}
 .g-aba[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
 .g-card label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.g-card select{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:16px var(--body)}
 .g-card input{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:16px var(--body)}
 .g-card input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .g-msg{margin:0;color:var(--danger);font-size:14px;min-height:1em}
 .g-codigo{display:flex;flex-direction:column;gap:8px;background:var(--row);border:1px solid var(--warn);border-radius:12px;padding:12px}
 .g-cod-val{font:700 24px var(--mono);letter-spacing:.12em;text-align:center;color:var(--warn);padding:6px;user-select:all}
+.p-serv{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:4px 6px;font:13px var(--body)}
 #quemTopo{font-size:13px;color:var(--muted);align-self:center}
 .link-sair{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
 .rel-sec{font-family:var(--display);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:6px 0 0}
@@ -165,6 +172,58 @@ body.travado{overflow:hidden}
   .aba{padding:8px 10px;font-size:13px}
 }
 </style>
+<style>
+/* Paleta com mais cores: base grafite neutra + uma cor por área */
+:root{
+  --bg:#0c0e13; --panel:#151922; --row:#1b202b; --line:#2a3140;
+  --fg:#eef1f7; --muted:#9aa3b5; --accent:#3d8bff; --accent-soft:#16233b;
+  --teal:#20c4a4; --teal-soft:#0f2e2a; --amber:#f5a524; --amber-soft:#33260f;
+  --violet:#a47bff; --violet-soft:#241a3b; --coral:#ff6b6b; --coral-soft:#3a1a1d;
+  --discord:#5865f2; --lime:#7bd96b;
+}
+h1 span{color:var(--amber)!important}
+/* Seções da tabela, cada uma com sua cor */
+#kicks{border-top:4px solid var(--amber)} #kicks h2{color:var(--amber)}
+#prisoes{border-top:4px solid var(--accent)} #prisoes h2{color:var(--accent)}
+#mutes{border-top:4px solid var(--violet)} #mutes h2{color:var(--violet)}
+#bans{border-top:4px solid var(--coral)} #bans h2{color:var(--coral)}
+#apoio{border-top:4px solid var(--lime)} #apoio h2{color:var(--lime)}
+#kicks .chip{border-color:var(--amber);background:var(--amber-soft)}
+#mutes .chip{border-color:var(--violet);background:var(--violet-soft)}
+#apoio .chip{border-color:var(--lime);background:#1b2a17}
+#bans .nocmd{color:var(--coral)}
+tbody tr[data-k] td:first-child{border-left:4px solid var(--c);color:var(--c);font-weight:600}
+tbody tr[data-k] .nome{color:var(--c);font-weight:600}
+tbody tr[data-k] .sig{border-left-color:var(--c);font-weight:400}
+tbody tr[data-k] .chip{border-color:var(--c)!important}
+#lCanal,#montarLog select,#montarLog .lg-sel{flex:none!important}
+.jump a[href="#kicks"]{border-color:var(--amber)} .jump a[href="#prisoes"]{border-color:var(--accent)}
+.jump a[href="#mutes"]{border-color:var(--violet)} .jump a[href="#bans"]{border-color:var(--coral)} .jump a[href="#apoio"]{border-color:var(--lime)}
+/* Quadros */
+.montar{border-color:var(--teal)} .montar h2{color:var(--teal)}
+#copiarPronto{background:var(--teal);color:#06231d}
+#cmdPronto{background:var(--teal-soft);border-color:var(--teal)}
+#montarLog{border-color:var(--amber)} #montarLog h2{color:var(--amber)}
+#salvarLog{background:var(--amber-soft)!important;border:1px solid var(--amber)!important;color:var(--fg)}
+#enviarDc,#relDc,.salvo [data-a="dc"]{background:var(--discord)!important}
+#drvBotao{background:#1fa463!important}
+#drvBarra{background:#1fa463}
+#vista-relatorio .montar{border-color:var(--violet)} #vista-relatorio .montar h2{color:var(--violet)}
+.rel-sec{color:var(--violet)!important}
+.badge{background:var(--amber-soft);border-color:var(--amber)}
+.sug[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-soft)}
+.nome::after{color:var(--teal)}
+.sig{border-left-color:var(--teal)}
+/* Abas com cor própria */
+#aba-tabela[aria-selected="true"]{border-bottom-color:var(--teal)}
+#aba-relatorio[aria-selected="true"]{border-bottom-color:var(--violet)}
+#aba-manual[aria-selected="true"]{border-bottom-color:var(--amber)}
+.note{border-left-color:var(--amber)} .note b{color:var(--amber)}
+#instalar{background:var(--amber);color:#2a1a02}
+.g-card{border-color:var(--teal)} .g-aba[aria-selected="true"]{border-bottom-color:var(--teal)}
+#gEntrar{background:var(--teal);color:#06231d}
+.man-body h3{color:var(--amber)}
+</style>
 </head>
 <body>
 <div id="gate" hidden>
@@ -176,8 +235,10 @@ body.travado{overflow:hidden}
       <button type="button" class="g-aba" data-m="criar" role="tab">Criar conta</button>
     </div>
     <label>Nome de ADM<input id="gNome" type="text" autocomplete="username" placeholder="ex.: ADM Amora"></label>
-    <label>Senha<input id="gSenha" type="password" autocomplete="current-password"></label>
+    <label id="gEmailBox" hidden>E-mail<input id="gEmail" type="email" autocomplete="email" placeholder="seu e-mail"></label>
+    <label id="gServBox" hidden>De qual servidor você é?<select id="gServ"><option value="">Escolha o servidor...</option><option value="01">Servidor 01</option><option value="02">Servidor 02</option><option value="03">Servidor 03</option><option value="04">Servidor 04</option><option value="05">Servidor 05</option><option value="06">Servidor 06</option><option value="07">Servidor 07</option><option value="08">Servidor 08</option><option value="09">Servidor 09</option><option value="10">Servidor 10</option></select></label>
     <label id="gCodBox" hidden>Código de recuperação<input id="gCod" type="text" autocomplete="off" placeholder="XXXX-XXXX" style="text-transform:uppercase;font-family:var(--mono)"></label>
+    <label>Senha<input id="gSenha" type="password" autocomplete="current-password"></label>
     <label id="gSenha2Box" hidden>Repita a senha<input id="gSenha2" type="password" autocomplete="new-password"></label>
     <button type="button" id="gEntrar" class="btn-copiar" style="width:100%">Entrar</button>
     <button type="button" id="gEsqueci" class="link-sair" style="align-self:center">Esqueci a senha</button>
@@ -257,7 +318,7 @@ body.travado{overflow:hidden}
     <div class="man-body">
       <h3>Conta de ADM</h3>
       <ol>
-        <li>Na primeira vez, toque em <b>Criar conta</b>, escolha o seu <b>nome de ADM</b> e uma <b>senha</b> (mínimo 4 caracteres).</li>
+        <li>Na primeira vez, toque em <b>Criar conta</b>, preencha o seu <b>nome de ADM</b>, <b>e-mail</b>, <b>de qual servidor você é</b> e uma <b>senha</b> (mínimo 4 caracteres). O servidor já entra sozinho nos logs (ex.: @SERVIDOR 04) e dá para trocar depois ao lado do seu nome.</li>
         <li>Nas próximas vezes, é só <b>Entrar</b> com o nome e a senha. Para trocar de ADM, toque em <b>Sair</b> no topo.</li>
         <li>Ao criar a conta, aparece um <b>código de recuperação</b> (ex.: <code>K7PQ-M2XZ</code>). Tire um print ou anote. Se esquecer a senha, toque em <b>Esqueci a senha</b>, digite o nome, o código e a senha nova. Depois disso, aparece um código novo para guardar.</li>
         <li>A conta fica guardada no celular. Cada ADM tem a sua e vê só os próprios logs salvos. Se trocar de celular, crie a conta de novo.</li>
@@ -286,7 +347,8 @@ body.travado{overflow:hidden}
       <ol>
         <li>Depois de montar o comando, desça até <b>Monte sua evidência</b>. O nick, o motivo, a regra e o tempo já vêm preenchidos.</li>
         <li>Escolha o <b>modelo</b> do canal onde vai postar (ex.: Registro de Prisão / Mute, Solicito banimento IP, Punição removida).</li>
-        <li>Cole o <b>link do Drive</b> em Evidências, preencha a observação se tiver e toque em <b>📤 Enviar agora</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
+        <li>Em <b>Evidências</b>, toque em <b>⬆️ Enviar vídeo ou foto</b>, entre com a sua conta Google e escolha um ou mais vídeos/fotos. Ele vai para a pasta <b>Evidências ADM Rio Rise</b> no <b>seu</b> Drive, o link é liberado e já entra no log sozinho. Se preferir, use <b>📁 Abrir Drive</b>, suba lá, copie o link e toque em <b>📋 Colar link</b>.</li>
+        <li>Preencha a observação se tiver e toque em <b>📤 Enviar agora</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
         <li>No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</li>
         <li><b>Está no jogo e vai mandar depois?</b> Toque em <b>💾 Salvar para enviar depois</b>. Os logs ficam em <b>Meus logs salvos</b>, separados por ADM. Depois é só tocar em <b>📤 Copiar e abrir no Discord</b> em cada um: ele copia, abre o canal certo e marca como enviado.</li>
         <li>Mais de um jogador? Coloque um nick por linha. Para o próximo log, toque em <b>Limpar para o próximo</b>.</li>
@@ -386,7 +448,17 @@ body.travado{overflow:hidden}
       <label data-campo="lInformar">Informar<input id="lInformar" type="text" placeholder="ex.: @LÍDER S04" autocomplete="off"></label>
       <label data-campo="lRemocao" class="lg-full">Motivo da remoção<input id="lRemocao" type="text" autocomplete="off"></label>
       <label data-campo="lObs" class="lg-full">Observação<input id="lObs" type="text" autocomplete="off"></label>
-      <label data-campo="lEvid" class="lg-full">Evidências (link do Drive)<input id="lEvid" type="url" placeholder="https://drive.google.com/..." autocomplete="off"></label>
+      <div data-campo="lEvid" class="lg-full drv">
+        <label>Evidências (vídeo, foto ou link)<textarea id="lEvid" rows="1" placeholder="https://drive.google.com/..." autocomplete="off"></textarea></label>
+        <div class="drv-bts">
+          <button type="button" id="drvBotao" class="btn-copiar" style="padding:9px 14px;font-size:14px">⬆️ Enviar vídeo ou foto</button>
+          <a class="mini" href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener" style="text-decoration:none">📁 Abrir Drive</a>
+          <button type="button" id="drvColar" class="mini">📋 Colar link</button>
+        </div>
+        <input id="drvArquivo" type="file" accept="video/*,image/*" multiple hidden>
+        <div id="drvProg" class="drv-prog" hidden><div id="drvBarra"></div></div>
+        <p id="drvMsg" class="dica-log" hidden></p>
+      </div>
     </div>
     <label class="lg-lab">Log pronto<textarea id="logPronto" rows="9" readonly></textarea></label>
     <label class="lg-lab">Enviar para o canal<select id="lCanal" class="lg-sel"></select></label>
@@ -423,7 +495,7 @@ body.travado{overflow:hidden}
 </div>
 
 <!-- Carrega sempre a versão mais nova do dados.js -->
-<script>document.write('<script src="dados.js?t=' + Date.now() + '"><\/script>');</script>
+<script>document.write('<script src="dados.js?t=' + Date.now() + '"><\/script><script src="config.js?t=' + Date.now() + '"><\/script>');</script>
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const curto = n => n.replace(/\s*\(.*?\)\s*/g, " ").trim();
@@ -431,6 +503,8 @@ const SIG = (typeof SIGNIFICADOS !== "undefined") ? SIGNIFICADOS : {};
 const signif = r => SIG[r.infracao] || SIG[curto(r.infracao)] || "";
 const completo = r => r.comando ? `${r.comando} ${curto(r.infracao)} | ${r.codigo}` : "";
 const comAlvo = t => t;
+/* Uma cor para cada infração (a mesma sigla tem sempre a mesma cor) */
+const corDe = n => { const s = String(n).replace(/\s*\(.*?\)\s*/g, " ").trim().toLowerCase(); let x = 0; for (const ch of s) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return `hsl(${(x * 137.508) % 360} 75% 64%)`; };
 const chip = c => `<button type="button" class="chip" data-c="${esc(c)}" aria-label="Copiar ${esc(c)}">${esc(c)}</button>`;
 const nocmd = '<span class="nocmd">Pedir a um superior</span>';
 
@@ -444,7 +518,7 @@ document.getElementById("sections").innerHTML = SECOES.map(s => `
     ${s.aviso ? `<div class="note">${s.aviso}</div>` : ""}
     <div class="scroll"><table>
       <thead><tr><th>Infração</th><th>Código</th><th>${esc(s.coluna)}</th><th>Comando</th></tr></thead>
-      <tbody>${s.linhas.map(r => `<tr data-k="${esc((r.infracao+" "+r.codigo+" "+signif(r)).toLowerCase())}">
+      <tbody>${s.linhas.map(r => `<tr data-k="${esc((r.infracao+" "+r.codigo+" "+signif(r)).toLowerCase())}" style="--c:${corDe(r.infracao)}">
         <td>${signif(r) ? `<button type="button" class="nome" aria-expanded="false">${esc(r.infracao)}</button><small class="sig" hidden>${esc(signif(r))}</small>` : esc(r.infracao)}</td><td class="code">${esc(r.codigo)}</td><td class="pun">${esc(r.punicao)}</td>
         <td>${r.comando ? chip(completo(r)) : nocmd}</td></tr>`).join("")}
       <tr class="none" hidden><td colspan="4" class="empty">Nada encontrado nesta seção.</td></tr></tbody>
@@ -637,8 +711,11 @@ function desenharPerfil() {
   if (ATUAL) {
     gate.hidden = true; document.body.classList.remove("travado");
     const nome = PERFIS[ATUAL].nome;
-    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b></span><span class="lg-linha"><button type="button" class="mini" id="pCod">${PERFIS[ATUAL].rec ? "Novo código de recuperação" : "⚠ Criar código de recuperação"}</button><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></span></div>`;
-    document.getElementById("quemTopo").innerHTML = `👤 ${esc(nome)} · <button type="button" class="link-sair" id="pSair2">Sair</button>`;
+    const sv = PERFIS[ATUAL].serv || "";
+    const optsSv = Array.from({ length: 10 }, (_, i) => String(i + 1).padStart(2, "0")).map(n => `<option value="${n}"${n === sv ? " selected" : ""}>Servidor ${n}</option>`).join("");
+    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b> · <select id="pServ" class="p-serv" aria-label="Seu servidor"><option value="">Servidor?</option>${optsSv}</select></span><span class="lg-linha"><button type="button" class="mini" id="pCod">${PERFIS[ATUAL].rec ? "Novo código de recuperação" : "⚠ Criar código de recuperação"}</button><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></span></div>`;
+    if (sv) { document.getElementById("lServ").value = "@SERVIDOR " + sv; atualizarLog(); }
+    document.getElementById("quemTopo").innerHTML = `👤 ${esc(nome)}${sv ? " · S" + sv : ""} · <button type="button" class="link-sair" id="pSair2">Sair</button>`;
     elSalvos.hidden = false; desenharSalvos();
     const ap = document.getElementById("lAplicador"); if (!ap.value) { ap.value = nome; atualizarLog(); }
     return;
@@ -669,6 +746,8 @@ function modoGate(m) {
   document.querySelectorAll("#gate .g-aba").forEach(b => b.setAttribute("aria-selected", b.dataset.m === m));
   document.getElementById("gSenha2Box").hidden = m === "entrar";
   document.getElementById("gCodBox").hidden = m !== "recuperar";
+  document.getElementById("gServBox").hidden = m !== "criar";
+  document.getElementById("gEmailBox").hidden = m !== "criar";
   document.getElementById("gEsqueci").hidden = m !== "entrar";
   document.getElementById("gEntrar").textContent = m === "criar" ? "Criar conta" : m === "recuperar" ? "Criar senha nova" : "Entrar";
   document.getElementById("gSenha").previousSibling.textContent = m === "recuperar" ? "Senha nova" : "Senha";
@@ -678,6 +757,7 @@ function modoGate(m) {
 }
 document.querySelectorAll("#gate .g-aba").forEach(b => b.addEventListener("click", () => modoGate(b.dataset.m)));
 document.getElementById("gEsqueci").addEventListener("click", () => modoGate("recuperar"));
+document.addEventListener("change", e => { if (e.target.id === "pServ" && ATUAL) { PERFIS[ATUAL].serv = e.target.value; gravarJ("adm_perfis", PERFIS); desenharPerfil(); } });
 async function gateEnviar() {
   const g = document.getElementById("gate"), msg = document.getElementById("gMsg"), modo = g.dataset.modo;
   const nome = document.getElementById("gNome").value.trim(), s1 = document.getElementById("gSenha").value, s2 = document.getElementById("gSenha2").value;
@@ -689,8 +769,12 @@ async function gateEnviar() {
   if (modo === "criar") {
     if (p && p.pin) return erro("Já existe uma conta com esse nome neste celular. Toque em Entrar.");
     if (s1 !== s2) return erro("As duas senhas não estão iguais.");
+    const email = document.getElementById("gEmail").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return erro("Digite um e-mail válido.");
+    const serv = document.getElementById("gServ").value;
+    if (!serv) return erro("Escolha de qual servidor você é.");
     const cod = gerarCodigo();
-    PERFIS[k] = { nome, pin: await hashPin(s1), rec: await hashCod(cod), logs: p ? p.logs : [] };
+    PERFIS[k] = { nome, email, serv, pin: await hashPin(s1), rec: await hashCod(cod), logs: p ? p.logs : [] };
     if (!gravarJ("adm_perfis", PERFIS)) return erro("Este navegador não deixa salvar. Abra pelo app instalado ou pelo Chrome normal (fora da aba anônima).");
     return mostrarCodigo(cod, entrar);
   }
@@ -766,6 +850,91 @@ elSalvos.addEventListener("click", e => {
   }
 });
 { const a = lerJ("adm_atual", null); if (a && PERFIS[a]) ATUAL = a; desenharPerfil(); }
+/* ---------- Enviar vídeo para o Google Drive de quem está usando ---------- */
+const DRV = { token: null, expira: 0, pasta: null };
+const drvMsg = t => { const m = document.getElementById("drvMsg"); m.hidden = !t; m.innerHTML = t || ""; };
+function carregarGIS() {
+  return new Promise((ok, falha) => {
+    if (window.google && google.accounts && google.accounts.oauth2) return ok();
+    const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.onload = () => ok(); s.onerror = () => falha(new Error("gis"));
+    document.head.appendChild(s);
+  });
+}
+async function pegarToken() {
+  if (DRV.token && Date.now() < DRV.expira - 60000) return DRV.token;
+  await carregarGIS();
+  return new Promise((ok, falha) => {
+    const cli = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID, scope: "https://www.googleapis.com/auth/drive.file",
+      callback: r => { if (r.error) return falha(new Error(r.error)); DRV.token = r.access_token; DRV.expira = Date.now() + (r.expires_in || 3600) * 1000; ok(DRV.token); },
+      error_callback: e => falha(new Error(e && e.type || "cancelado")),
+    });
+    cli.requestAccessToken({ prompt: "" });
+  });
+}
+async function pastaEvidencias(tok) {
+  const salva = (() => { try { return localStorage.getItem("adm_pasta_drive"); } catch (_) { return null; } })();
+  if (salva) {
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${salva}?fields=id,trashed`, { headers: { Authorization: "Bearer " + tok } });
+    if (r.ok && !(await r.json()).trashed) return salva;
+  }
+  const r = await fetch("https://www.googleapis.com/drive/v3/files?fields=id", { method: "POST", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Evidências ADM Rio Rise", mimeType: "application/vnd.google-apps.folder" }) });
+  if (!r.ok) throw new Error("pasta");
+  const id = (await r.json()).id; try { localStorage.setItem("adm_pasta_drive", id); } catch (_) {}
+  return id;
+}
+function subirArquivo(tok, arq, pasta) {
+  return new Promise(async (ok, falha) => {
+    const nick = (v("lNomes").split("\n")[0] || "evidencia").replace(/[^\w.-]+/g, "_");
+    const nome = `${nick}_${v("lMotivo").replace(/[^\w.-]+/g, "_") || "log"}_${hoje().replace(/\//g, "-")}_${arq.name}`;
+    const ini = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id", {
+      method: "POST", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": arq.type || "application/octet-stream", "X-Upload-Content-Length": String(arq.size) },
+      body: JSON.stringify({ name: nome, parents: [pasta] }) });
+    if (!ini.ok) return falha(new Error("inicio " + ini.status));
+    const url = ini.headers.get("Location");
+    const x = new XMLHttpRequest(); x.open("PUT", url); x.setRequestHeader("Content-Type", arq.type || "application/octet-stream");
+    const barra = document.getElementById("drvBarra");
+    x.upload.onprogress = e => { if (e.lengthComputable) { const pct = Math.round(e.loaded / e.total * 100); barra.style.width = pct + "%"; drvMsg(`Enviando... ${pct}%`); } };
+    x.onload = () => x.status < 300 ? ok(JSON.parse(x.responseText).id) : falha(new Error("envio " + x.status));
+    x.onerror = () => falha(new Error("rede"));
+    x.send(arq);
+  });
+}
+document.getElementById("drvBotao").addEventListener("click", () => {
+  if (typeof GOOGLE_CLIENT_ID === "undefined" || !GOOGLE_CLIENT_ID) return drvMsg("O envio de vídeo ainda não foi configurado. Use <b>📁 Abrir Drive</b> e cole o link.");
+  document.getElementById("drvArquivo").click();
+});
+document.getElementById("drvArquivo").addEventListener("change", async e => {
+  const arqs = [...e.target.files]; e.target.value = ""; if (!arqs.length) return;
+  const prog = document.getElementById("drvProg"), barra = document.getElementById("drvBarra"), bt = document.getElementById("drvBotao");
+  bt.disabled = true; prog.hidden = false; barra.style.width = "0%";
+  try {
+    drvMsg("Entrando na sua conta Google...");
+    const tok = await pegarToken();
+    drvMsg("Preparando a pasta Evidências ADM Rio Rise...");
+    const pasta = await pastaEvidencias(tok);
+    for (const [n, arq] of arqs.entries()) {
+      if (arqs.length > 1) drvMsg(`Arquivo ${n + 1} de ${arqs.length}...`);
+      barra.style.width = "0%";
+      const id = await subirArquivo(tok, arq, pasta);
+      await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, { method: "POST", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json" }, body: JSON.stringify({ role: "reader", type: "anyone" }) });
+      const link = `https://drive.google.com/file/d/${id}/view?usp=drivesdk`;
+      const ev = document.getElementById("lEvid"); ev.value = ev.value.trim() ? ev.value.trim() + "\n" + link : link; atualizarLog();
+    }
+    barra.style.width = "100%"; drvMsg(arqs.length > 1 ? `✓ ${arqs.length} arquivos enviados! Os links já estão no campo Evidências.` : "✓ Enviado! O link já está no campo Evidências.");
+  } catch (err) {
+    const m = String(err.message || "");
+    drvMsg(/cancel|popup|access_denied/.test(m) ? "Login do Google cancelado. Toque de novo para tentar." :
+      /rede/.test(m) ? "A internet caiu durante o envio. Tente de novo com uma conexão melhor." :
+      "Não consegui enviar o vídeo. Tente de novo ou use <b>📁 Abrir Drive</b>.");
+  } finally { bt.disabled = false; setTimeout(() => { prog.hidden = true; }, 1500); }
+});
+document.getElementById("drvColar").addEventListener("click", async () => {
+  try { const t = (await navigator.clipboard.readText()).trim(); if (!/^https?:\/\//.test(t)) return drvMsg("O que está copiado não é um link."); document.getElementById("lEvid").value = t; atualizarLog(); drvMsg("✓ Link colado."); }
+  catch (_) { drvMsg("Não consegui ler o que foi copiado. Toque e segure no campo Evidências → Colar."); }
+});
+
 /* ---------- Relatório de turno ---------- */
 const R_IDS = ["rLider","rData","rAdms","rHP","rPF","rPFini","rPFfim","rEB","rEBarm","rMidia","rRoxos","rRoxosDin","rRoxosMat","rVerdes","rVerdesDin","rVerdesMat","rKush","rLS","rFam","rObs","rPun","rComunicar"];
 const R_FICA = ["rLider","rAdms","rComunicar"];   // continuam preenchidos no próximo relatório
