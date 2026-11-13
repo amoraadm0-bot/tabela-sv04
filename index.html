@@ -67,6 +67,24 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .engrenagem:hover{border-color:var(--accent)}
 .engrenagem:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dica-log{margin:0;font-size:13px;color:var(--muted)}
+.rel-sec{font-family:var(--display);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:6px 0 0}
+#relCampos input,#relCampos textarea{flex:none;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:9px 11px;font:14px var(--body);width:100%;min-width:0}
+#relCampos .lg-linha input{flex:1 1 auto}
+#relPronto{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:9px 11px;font:13px var(--mono);line-height:1.4;width:100%;resize:vertical}
+.perfil-on{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--row);border:1px solid var(--line);border-radius:10px;padding:8px 12px;flex-wrap:wrap}
+.perfil-off{display:flex;flex-direction:column;gap:10px;background:var(--row);border:1px solid var(--line);border-radius:10px;padding:12px}
+.salvos{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.salvos-tit{font-family:var(--display);font-size:17px;margin:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;letter-spacing:.03em}
+.badge{font:600 12px var(--body);background:var(--accent-soft);border:1px solid var(--accent);border-radius:999px;padding:2px 10px}
+.filtros{display:flex;gap:6px;flex-wrap:wrap}
+.filtros [aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.salvo{background:var(--row);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.salvo.enviado{border-left-color:#3ccf8e;opacity:.8}
+.salvo-top{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.salvo-top span{color:var(--muted);font-size:12px;white-space:nowrap}
+.salvo pre{white-space:pre-wrap;word-break:break-word;font:12px var(--mono);margin:6px 0 0;color:var(--fg)}
+.salvo summary{cursor:pointer;font-size:13px;color:var(--accent)}
+.perigo-mini{color:var(--danger)}
 .log-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .log-grid label,.lg-lab{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
 .log-grid .lg-full{grid-column:1/-1}
@@ -141,9 +159,54 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 
   <nav class="abas" role="tablist" aria-label="Páginas">
     <button type="button" class="aba" role="tab" id="aba-tabela" data-v="tabela" aria-selected="true">Tabela</button>
+    <button type="button" class="aba" role="tab" id="aba-relatorio" data-v="relatorio" aria-selected="false">📝 Relatório de turno</button>
     <button type="button" class="aba" role="tab" id="aba-manual" data-v="manual" aria-selected="false">📖 Manual do usuário</button>
     <a class="aba" href="admin.html" style="text-decoration:none">🔒 Acesso administrativo</a>
   </nav>
+
+  <div class="vista" id="vista-relatorio" hidden>
+  <section class="montar" aria-labelledby="relTit">
+    <h2 id="relTit">Relatório de turno</h2>
+    <p class="dica-log">Preencha durante o turno. Fica salvo sozinho neste celular até você tocar em "Começar novo relatório".</p>
+    <div id="relCampos" class="log-grid">
+      <label>Líder de turno<input id="rLider" type="text" placeholder="ex.: @ASSIST⁰⁴ | Amora" autocomplete="off"></label>
+      <label>Data<span class="lg-linha"><input id="rData" type="text" autocomplete="off"><button type="button" class="mini" id="rHoje">Hoje</button></span></label>
+      <label class="lg-full">Administradores em turno<textarea id="rAdms" rows="2" placeholder="um por linha ou separados por espaço"></textarea></label>
+
+      <h3 class="rel-sec lg-full">Organizações</h3>
+      <label class="lg-full">HP<textarea id="rHP" rows="2"></textarea></label>
+      <label class="lg-full">PF<textarea id="rPF" rows="2"></textarea></label>
+      <label>PF · Armamento início<input id="rPFini" type="text" placeholder="66 635 / 100 000" autocomplete="off"></label>
+      <label>PF · Armamento final<input id="rPFfim" type="text" placeholder="66 415 / 100 000" autocomplete="off"></label>
+      <label class="lg-full">EB<textarea id="rEB" rows="2"></textarea></label>
+      <label>EB · Armamento<input id="rEBarm" type="text" placeholder="71 185 / 300 000" autocomplete="off"></label>
+      <label class="lg-full">Mídia<textarea id="rMidia" rows="2"></textarea></label>
+
+      <h3 class="rel-sec lg-full">Facções / Máfias / Famílias</h3>
+      <label class="lg-full">Roxos<textarea id="rRoxos" rows="2"></textarea></label>
+      <label>Roxos · Dinheiro<input id="rRoxosDin" type="text" autocomplete="off"></label>
+      <label>Roxos · Material<input id="rRoxosMat" type="text" autocomplete="off"></label>
+      <label class="lg-full">Verdes<textarea id="rVerdes" rows="2"></textarea></label>
+      <label>Verdes · Dinheiro<input id="rVerdesDin" type="text" autocomplete="off"></label>
+      <label>Verdes · Material<input id="rVerdesMat" type="text" autocomplete="off"></label>
+      <label class="lg-full">KUSH'$<textarea id="rKush" rows="2"></textarea></label>
+      <label class="lg-full">Los_Santos<textarea id="rLS" rows="2"></textarea></label>
+      <label class="lg-full">Famílias<textarea id="rFam" rows="2"></textarea></label>
+
+      <h3 class="rel-sec lg-full">Fechamento</h3>
+      <label class="lg-full">Observação do turno<textarea id="rObs" rows="3"></textarea></label>
+      <label class="lg-full">Punições aplicadas<span class="lg-linha" style="align-items:flex-start"><textarea id="rPun" rows="3" style="flex:1 1 auto"></textarea></span><button type="button" class="mini" id="rPuxar" style="align-self:flex-start">↓ Puxar dos meus logs de hoje</button></label>
+      <label class="lg-full">Comunicar à liderança<input id="rComunicar" type="text" placeholder="ex.: @LÍDER S04 | Joker" autocomplete="off"></label>
+    </div>
+    <label class="lg-lab">Relatório pronto<textarea id="relPronto" rows="10" readonly></textarea></label>
+    <div class="resultado">
+      <a id="relDc" class="btn-copiar" href="https://discord.com/channels/1286404288708477050/1397080126893854881" target="_blank" rel="noopener" style="text-decoration:none">📤 Copiar e abrir no Discord</a>
+      <button type="button" class="mini" id="relCopiar">Só copiar</button>
+      <button type="button" class="mini" id="relNovo">Começar novo relatório</button>
+    </div>
+    <p class="dica-log" id="relAviso" hidden>Relatório copiado! No canal 📝 relatório-de-turno, toque e segure na caixa de mensagem → <b>Colar</b> e envie.</p>
+  </section>
+  </div>
 
   <div class="vista" id="vista-manual" hidden>
     <div class="man-body">
@@ -172,8 +235,17 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
         <li>Escolha o <b>modelo</b> do canal onde vai postar (ex.: Registro de Prisão / Mute, Solicito banimento IP, Punição removida).</li>
         <li>Cole o <b>link do Drive</b> em Evidências, preencha a observação se tiver e toque em <b>📤 Copiar e abrir no Discord</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
         <li>No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</li>
+        <li><b>Está no jogo e vai mandar depois?</b> Entre com o seu nome de ADM (e um PIN, se quiser) e toque em <b>💾 Salvar log</b>. Os logs ficam em <b>Meus logs salvos</b>, separados por ADM. Depois é só tocar em <b>📤 Copiar e abrir no Discord</b> em cada um: ele copia, abre o canal certo e marca como enviado.</li>
         <li>Mais de um jogador? Coloque um nick por linha. Para o próximo log, toque em <b>Limpar para o próximo</b>.</li>
         <li>Servidor, "Informar" e "Aplicada por" ficam salvos no seu celular. Se o app fechar sem querer, o que você preencheu volta quando abrir de novo.</li>
+      </ol>
+
+      <h3>Relatório de turno</h3>
+      <ol>
+        <li>Abra a aba <b>📝 Relatório de turno</b> e vá preenchendo durante o turno. Fica salvo sozinho, mesmo se o app fechar.</li>
+        <li>Em <b>Punições aplicadas</b>, toque em <b>↓ Puxar dos meus logs de hoje</b> para listar os logs que você salvou hoje.</li>
+        <li>No fim, toque em <b>📤 Copiar e abrir no Discord</b>: abre o canal 📝 relatório-de-turno. Cole e envie.</li>
+        <li>Para o próximo turno, toque em <b>Começar novo relatório</b> (líder, ADMs e "comunicar" continuam preenchidos).</li>
       </ol>
 
       <h3>Ou copiar direto da tabela</h3>
@@ -246,6 +318,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 
   <section class="montar" id="montarLog" aria-labelledby="logTit">
     <h2 id="logTit">Monte sua evidência</h2>
+    <div id="perfilBox"></div>
     <p class="dica-log">Puxa sozinho o nick, o motivo, a regra e o tempo do quadro de cima. Confira, cole o link das evidências e copie para o canal de logs.</p>
     <div id="logCampos" class="log-grid">
       <label class="lg-full">Modelo do log<select id="lModelo"></select></label>
@@ -265,10 +338,12 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
     <label class="lg-lab">Log pronto<textarea id="logPronto" rows="9" readonly></textarea></label>
     <label class="lg-lab">Enviar para o canal<select id="lCanal" class="lg-sel"></select></label>
     <div class="resultado">
+      <button type="button" id="salvarLog" class="btn-copiar">💾 Salvar log</button>
       <a id="enviarDc" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none">📤 Copiar e abrir no Discord</a>
       <button type="button" id="copiarLog" class="mini">Só copiar</button>
       <button type="button" id="lLimpar" class="mini">Limpar para o próximo</button>
     </div>
+    <div id="salvosBox" class="salvos" hidden></div>
     <p class="dica-log" id="dcAviso" hidden>Log copiado! No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</p>
   </section>
 
@@ -495,6 +570,185 @@ sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atua
   selCanal.value = MODELOS[v("lModelo")].canal; linkCanal();
   atualizarLog();
 })();
+/* ---------- Perfil do ADM + logs salvos (ficam guardados neste celular) ---------- */
+const lerJ = (k, pad) => { try { return JSON.parse(localStorage.getItem(k)) ?? pad; } catch (_) { return pad; } };
+const gravarJ = (k, val) => { try { localStorage.setItem(k, JSON.stringify(val)); return true; } catch (_) { return false; } };
+const hashPin = async p => { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("adm-rr|" + p)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); };
+let PERFIS = lerJ("adm_perfis", {}), ATUAL = null, filtroLogs = "pend";
+const elPerfil = document.getElementById("perfilBox"), elSalvos = document.getElementById("salvosBox");
+const chaveP = n => n.trim().toLowerCase();
+
+function desenharPerfil(msg) {
+  if (ATUAL) {
+    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(PERFIS[ATUAL].nome)}</b></span><button type="button" class="mini" id="pSair">Trocar ADM</button></div>`;
+    elSalvos.hidden = false; desenharSalvos();
+    const ap = document.getElementById("lAplicador"); if (!ap.value) { ap.value = PERFIS[ATUAL].nome; atualizarLog(); }
+    return;
+  }
+  elSalvos.hidden = true;
+  const nomes = Object.values(PERFIS).map(p => p.nome);
+  elPerfil.innerHTML = `<div class="perfil-off">
+    <p class="dica-log" style="margin:0">Entre com o seu nome de ADM para <b>salvar os logs</b> e mandar depois. Cada ADM vê só os seus.</p>
+    <div class="log-grid">
+      <label>Nome do ADM<input id="pfNome" type="text" list="pfLista" autocomplete="off" placeholder="ex.: ADM Amora"></label>
+      <label>PIN (4 a 8 números, opcional)<input id="pfPin" type="password" inputmode="numeric" autocomplete="off"></label>
+    </div>
+    <datalist id="pfLista">${nomes.map(n => `<option value="${esc(n)}">`).join("")}</datalist>
+    <div class="resultado"><button type="button" class="btn-copiar" id="pfEntrar">Entrar</button></div>
+    ${msg ? `<p class="dica-log" style="color:var(--danger)">${msg}</p>` : ""}
+  </div>`;
+}
+elPerfil.addEventListener("click", async e => {
+  if (e.target.id === "pSair") { ATUAL = null; gravarJ("adm_atual", null); desenharPerfil(); return; }
+  if (e.target.id !== "pfEntrar") return;
+  const nome = document.getElementById("pfNome").value.trim(), pin = document.getElementById("pfPin").value.trim();
+  if (!nome) return desenharPerfil("Digite o seu nome de ADM.");
+  if (pin && !/^\d{4,8}$/.test(pin)) return desenharPerfil("O PIN precisa ter de 4 a 8 números.");
+  const k = chaveP(nome), p = PERFIS[k];
+  if (p) {
+    if (p.pin && p.pin !== await hashPin(pin)) return desenharPerfil("PIN errado para esse ADM.");
+  } else {
+    PERFIS[k] = { nome, pin: pin ? await hashPin(pin) : "", logs: [] };
+    if (!gravarJ("adm_perfis", PERFIS)) return desenharPerfil("Este navegador não deixa salvar. Abra pelo app instalado ou pelo Chrome normal (fora da aba anônima).");
+  }
+  ATUAL = k; gravarJ("adm_atual", k); desenharPerfil();
+});
+
+function salvarPerfis() { gravarJ("adm_perfis", PERFIS); }
+document.getElementById("salvarLog").addEventListener("click", () => {
+  const b = document.getElementById("salvarLog");
+  if (!ATUAL) { elPerfil.scrollIntoView({ block: "center" }); desenharPerfil("Entre com o seu nome de ADM para salvar."); return; }
+  PERFIS[ATUAL].logs.unshift({ id: Date.now(), quando: Date.now(), modelo: v("lModelo"), canal: selCanal.value, nomes: v("lNomes"), motivo: v("lMotivo"), texto: document.getElementById("logPronto").value, enviado: false });
+  salvarPerfis(); filtroLogs = "pend"; desenharSalvos();
+  b.textContent = "Salvo! ✓"; setTimeout(() => b.textContent = "💾 Salvar log", 1200);
+});
+function desenharSalvos() {
+  if (!ATUAL) return;
+  const logs = PERFIS[ATUAL].logs, pend = logs.filter(l => !l.enviado).length;
+  const lista = logs.filter(l => filtroLogs === "todos" || (filtroLogs === "pend" ? !l.enviado : l.enviado));
+  const hora = t => new Date(t).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const nomeCanal = id => (CANAIS.find(c => c[0] === id) || [, "canal"])[1];
+  elSalvos.innerHTML = `
+    <h3 class="salvos-tit">Meus logs salvos <span class="badge">${pend} para enviar</span></h3>
+    <div class="filtros">
+      <button type="button" class="mini" data-f="pend" aria-pressed="${filtroLogs === "pend"}">Para enviar</button>
+      <button type="button" class="mini" data-f="env" aria-pressed="${filtroLogs === "env"}">Enviados</button>
+      <button type="button" class="mini" data-f="todos" aria-pressed="${filtroLogs === "todos"}">Todos</button>
+    </div>
+    ${lista.length ? lista.map(l => `<div class="salvo${l.enviado ? " enviado" : ""}" data-id="${l.id}">
+      <div class="salvo-top"><b>${esc((l.nomes || "Sem nick").split("\n").join(", "))}</b><span>${hora(l.quando)}</span></div>
+      <div class="dica-log">${esc(l.motivo || "")} · ${esc(nomeCanal(l.canal))}${l.enviado ? " · ✓ enviado" : ""}</div>
+      <details><summary>Ver texto</summary><pre>${esc(l.texto)}</pre></details>
+      <div class="resultado">
+        <a class="btn-copiar" data-a="dc" href="https://discord.com/channels/${DC_SERVIDOR}/${l.canal}" target="_blank" rel="noopener" style="text-decoration:none;padding:9px 14px;font-size:14px">📤 Copiar e abrir no Discord</a>
+        <button type="button" class="mini" data-a="env">${l.enviado ? "Marcar como não enviado" : "Marcar como enviado"}</button>
+        <button type="button" class="mini perigo-mini" data-a="del">Apagar</button>
+      </div></div>`).join("") : `<p class="dica-log">${filtroLogs === "pend" ? "Nenhum log esperando envio. Monte um acima e toque em 💾 Salvar log." : "Nada aqui ainda."}</p>`}
+    <p class="dica-log">Os logs ficam salvos só neste celular.</p>`;
+}
+let apagarLogPend = null;
+elSalvos.addEventListener("click", e => {
+  const f = e.target.closest("[data-f]"); if (f) { filtroLogs = f.dataset.f; desenharSalvos(); return; }
+  const b = e.target.closest("[data-a]"); if (!b) return;
+  const card = b.closest(".salvo"), logs = PERFIS[ATUAL].logs, l = logs.find(x => String(x.id) === card.dataset.id);
+  if (!l) return;
+  if (b.dataset.a === "dc") {
+    try { navigator.clipboard.writeText(l.texto).catch(() => {}); } catch (_) {}
+    l.enviado = true; salvarPerfis(); setTimeout(desenharSalvos, 300);
+    const av = document.getElementById("dcAviso"); av.hidden = false; setTimeout(() => av.hidden = true, 8000);
+  } else if (b.dataset.a === "env") { l.enviado = !l.enviado; salvarPerfis(); desenharSalvos(); }
+  else if (b.dataset.a === "del") {
+    if (apagarLogPend !== b) { apagarLogPend = b; b.textContent = "Confirmar?"; setTimeout(() => { if (apagarLogPend === b) { apagarLogPend = null; b.textContent = "Apagar"; } }, 3000); return; }
+    PERFIS[ATUAL].logs = logs.filter(x => x !== l); salvarPerfis(); desenharSalvos();
+  }
+});
+{ const a = lerJ("adm_atual", null); if (a && PERFIS[a]) ATUAL = a; desenharPerfil(); }
+/* ---------- Relatório de turno ---------- */
+const R_IDS = ["rLider","rData","rAdms","rHP","rPF","rPFini","rPFfim","rEB","rEBarm","rMidia","rRoxos","rRoxosDin","rRoxosMat","rVerdes","rVerdesDin","rVerdesMat","rKush","rLS","rFam","rObs","rPun","rComunicar"];
+const R_FICA = ["rLider","rAdms","rComunicar"];   // continuam preenchidos no próximo relatório
+const rv = id => document.getElementById(id).value.trim();
+function textoRel() {
+  return `RELATÓRIO DE LÍDERES DE TURNO
+
+Líder de Turno: ${rv("rLider")}
+
+Administradores em turno: ${rv("rAdms").split("\n").map(s => s.trim()).filter(Boolean).join(" ")}
+
+ORGANIZAÇÕES
+
+HP: ${rv("rHP")}
+
+PF: ${rv("rPF")}
+
+Início: • Armamento: ${rv("rPFini")}
+Final: • Armamento: ${rv("rPFfim")}
+
+EB: ${rv("rEB")}
+
+• Armamento: ${rv("rEBarm")}
+
+Mídia: ${rv("rMidia")}
+
+FACÇÕES / MÁFIAS / FAMÍLIAS
+
+Roxos: ${rv("rRoxos")}
+
+Dinheiro: ${rv("rRoxosDin")}
+Material: ${rv("rRoxosMat")}
+
+Verdes: ${rv("rVerdes")}
+
+Dinheiro: ${rv("rVerdesDin")}
+Material: ${rv("rVerdesMat")}
+
+KUSH'$: ${rv("rKush")}
+
+Los_Santos: ${rv("rLS")}
+
+Famílias: ${rv("rFam")}
+
+Observação do turno: ${rv("rObs")}
+
+Punições Aplicadas: ${rv("rPun")}
+
+Data: ${rv("rData")}
+
+Comunicar à liderança: ${rv("rComunicar")}`;
+}
+function atualizarRel() {
+  document.getElementById("relPronto").value = textoRel();
+  try { const o = {}; R_IDS.forEach(id => o[id] = document.getElementById(id).value); localStorage.setItem("adm_relatorio", JSON.stringify(o)); } catch (_) {}
+}
+document.getElementById("relCampos").addEventListener("input", atualizarRel);
+document.getElementById("rHoje").addEventListener("click", () => { document.getElementById("rData").value = hoje(); atualizarRel(); });
+document.getElementById("rPuxar").addEventListener("click", () => {
+  const b = document.getElementById("rPuxar");
+  if (!ATUAL) { b.textContent = "Entre com seu nome de ADM na aba Tabela"; setTimeout(() => b.textContent = "↓ Puxar dos meus logs de hoje", 2500); return; }
+  const ini = new Date(); ini.setHours(0, 0, 0, 0);
+  const linhas = PERFIS[ATUAL].logs.filter(l => l.quando >= ini.getTime()).reverse()
+    .map(l => { const regra = (l.texto.match(/REGRA:\s*([\d.]+)/) || l.texto.match(/\|\s*([\d.]+)/) || [])[1] || ""; return `${(l.nomes || "").split("\n").join(", ")} - ${l.motivo || ""}${regra ? " (" + regra + ")" : ""}`; });
+  if (!linhas.length) { b.textContent = "Nenhum log salvo hoje"; setTimeout(() => b.textContent = "↓ Puxar dos meus logs de hoje", 2000); return; }
+  document.getElementById("rPun").value = "\n" + linhas.join("\n"); atualizarRel();
+});
+const copiarRel = () => { try { navigator.clipboard.writeText(document.getElementById("relPronto").value).catch(() => {}); } catch (_) {} };
+document.getElementById("relDc").addEventListener("click", () => { copiarRel(); const a = document.getElementById("relAviso"); a.hidden = false; setTimeout(() => a.hidden = true, 8000); });
+document.getElementById("relCopiar").addEventListener("click", () => { copiarRel(); const b = document.getElementById("relCopiar"); b.textContent = "Copiado!"; setTimeout(() => b.textContent = "Só copiar", 1100); });
+let novoRelPend = false;
+document.getElementById("relNovo").addEventListener("click", () => {
+  const b = document.getElementById("relNovo");
+  if (!novoRelPend) { novoRelPend = true; b.textContent = "Apagar e começar novo?"; setTimeout(() => { novoRelPend = false; b.textContent = "Começar novo relatório"; }, 3000); return; }
+  novoRelPend = false; b.textContent = "Começar novo relatório";
+  R_IDS.filter(id => !R_FICA.includes(id)).forEach(id => document.getElementById(id).value = "");
+  document.getElementById("rData").value = hoje(); atualizarRel();
+});
+(function () {
+  let o = {}; try { o = JSON.parse(localStorage.getItem("adm_relatorio") || "{}"); } catch (_) {}
+  R_IDS.forEach(id => { if (o[id]) document.getElementById(id).value = o[id]; });
+  if (!document.getElementById("rData").value) document.getElementById("rData").value = hoje();
+  atualizarRel();
+})();
+
+
 
 copiar.addEventListener("click", () => {
   const t = pronto.textContent;
@@ -506,12 +760,14 @@ copiar.addEventListener("click", () => {
 function mostrar(v) {
   document.getElementById("vista-tabela").hidden = v !== "tabela";
   document.getElementById("vista-manual").hidden = v !== "manual";
+  document.getElementById("vista-relatorio").hidden = v !== "relatorio";
   document.querySelectorAll("button.aba").forEach(a => a.setAttribute("aria-selected", a.dataset.v === v));
 }
 document.querySelectorAll("button.aba").forEach(a => a.addEventListener("click", () => {
-  mostrar(a.dataset.v); history.replaceState(null, "", a.dataset.v === "manual" ? "#manual" : location.pathname);
+  mostrar(a.dataset.v); history.replaceState(null, "", a.dataset.v === "tabela" ? location.pathname : "#" + a.dataset.v);
 }));
 if (location.hash === "#manual") mostrar("manual");
+if (location.hash === "#relatorio") mostrar("relatorio");
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 document.getElementById("q").addEventListener("input", e => {
