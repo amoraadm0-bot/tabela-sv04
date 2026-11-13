@@ -1,6 +1,6 @@
 {
-  "name": "App para ADM Rio Rise",
-  "short_name": "ADM Rio Rise",
+  "name": "ADM",
+  "short_name": "ADM",
   "description": "Tabela de punições e comandos para ADM Rio Rise - Admin Amora",
   "start_url": "./",
   "scope": "./",
