@@ -269,6 +269,66 @@ body.compacto .montar{padding:10px;gap:8px}
 body.compacto .montar h2{font-size:15px}
 body.compacto .aba{padding:6px 8px;font-size:12px}
 body.compacto #montarLog .dica-log:first-of-type{display:none}
+
+/* ===== Celular: barra de abas embaixo, cabeçalho enxuto e tabelas em cartões ===== */
+.ab-ic{margin-right:6px}
+@media (max-width: 680px) {
+  body{font-size:15px}
+  .wrap{padding-block:12px calc(86px + env(safe-area-inset-bottom,0px));gap:14px}
+  header{gap:8px;align-items:center}
+  header h1{font-size:24px!important}
+  header p{display:none}
+  #instalar{padding:8px 12px;font-size:13px}
+  /* barra de abas fixa embaixo, igual app */
+  .abas{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;display:flex!important;flex-wrap:nowrap!important;gap:0;background:var(--panel);border-top:1px solid var(--line);border-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);box-shadow:0 -6px 18px rgba(0,0,0,.35)}
+  .abas .aba{flex:1 1 0;min-width:0;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 2px 9px;margin:0;border:0;border-top:3px solid transparent;border-bottom:0!important;font-size:11px;line-height:1.1;color:var(--muted)}
+  .abas .ab-ic{margin:0;font-size:20px}
+  .abas .ab-tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .abas .aba[aria-selected="true"]{color:var(--fg);background:var(--row)}
+  #aba-tabela[aria-selected="true"]{border-top-color:var(--teal)}
+  #aba-evidencia[aria-selected="true"]{border-top-color:var(--amber)}
+  #aba-relatorio[aria-selected="true"]{border-top-color:var(--violet)}
+  #aba-manual[aria-selected="true"]{border-top-color:var(--accent)}
+  body.compacto .abas a{display:flex!important}
+  .btn-compacto{bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;width:44px;height:44px;font-size:20px}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}
+  /* busca + atalhos */
+  .tools{gap:8px;padding-block:8px}
+  .jump{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px;scrollbar-width:none}
+  .jump::-webkit-scrollbar{display:none}
+  .jump a{flex:none}
+  /* tabelas viram cartões, sem rolar para o lado */
+  section{padding:14px 12px 8px}
+  .scroll{overflow:visible}
+  #sections table,#apoio table{min-width:0;display:block}
+  #sections thead,#apoio thead{display:none}
+  #sections tbody,#apoio tbody{display:flex;flex-direction:column;gap:8px}
+  #sections tbody tr[data-k]{display:grid;grid-template-columns:1fr auto;gap:4px 10px;background:var(--row);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:10px 12px}
+  #sections tbody tr[data-k] td{border:0!important;padding:0}
+  #sections tbody tr[data-k] td:first-child{grid-column:1;font-size:16px}
+  #sections tbody tr[data-k] td.code{grid-column:2;grid-row:1;text-align:right;width:auto;align-self:start;font-size:13px}
+  #sections tbody tr[data-k] td.pun{grid-column:1/-1;color:var(--muted);font-size:14px}
+  #sections tbody tr[data-k] td:last-child{grid-column:1/-1;margin-top:4px}
+  #sections tbody tr[data-k] .chip{display:block;width:100%;text-align:left;font-size:13px;padding:8px 10px}
+  #sections tbody tr[data-k] .sig{max-width:none}
+  #sections tbody tr.none td{border:0}
+  #apoio tbody tr{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--row);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  #apoio tbody td{border:0!important;padding:0}
+  /* quadros */
+  .montar{padding:14px 12px;border-radius:14px}
+  .montar h2{font-size:19px}
+  .campos{gap:8px}
+  .campos > *{flex:1 1 100%!important}
+  #tempoCmd{flex:1 1 100%!important}
+  .resultado > *{flex:1 1 auto;text-align:center;justify-content:center}
+  #cmdPronto{font-size:16px}
+  .log-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .log-grid .lg-full,.log-grid [data-campo="lNomes"],.log-grid [data-campo="lMotivo"],.log-grid [data-campo="lData"],.log-grid [data-campo="lServ"]{grid-column:1/-1}
+  #relCampos{grid-template-columns:1fr 1fr}
+  .salvo .resultado > *{flex:1 1 100%}
+  .man-body{padding:6px 14px 16px}
+}
+@media (max-width: 360px) { .abas .ab-tx{font-size:10px} .log-grid,#relCampos{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -319,11 +379,11 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   <div id="comoInstalar" class="note" hidden></div>
 
   <nav class="abas" role="tablist" aria-label="Páginas">
-    <button type="button" class="aba" role="tab" id="aba-tabela" data-v="tabela" aria-selected="true">Tabela</button>
-    <button type="button" class="aba" role="tab" id="aba-evidencia" data-v="evidencia" aria-selected="false">🧾 Montar evidência</button>
-    <button type="button" class="aba" role="tab" id="aba-relatorio" data-v="relatorio" aria-selected="false">📝 Relatório de turno</button>
-    <button type="button" class="aba" role="tab" id="aba-manual" data-v="manual" aria-selected="false">📖 Manual do usuário</button>
-    <a class="aba" href="admin.html" style="text-decoration:none">🔒 Acesso administrativo</a>
+    <button type="button" class="aba" role="tab" id="aba-tabela" data-v="tabela" aria-selected="true"><span class="ab-ic">📋</span><span class="ab-tx">Tabela</span></button>
+    <button type="button" class="aba" role="tab" id="aba-evidencia" data-v="evidencia" aria-selected="false"><span class="ab-ic">🧾</span><span class="ab-tx">Evidência</span></button>
+    <button type="button" class="aba" role="tab" id="aba-relatorio" data-v="relatorio" aria-selected="false"><span class="ab-ic">📝</span><span class="ab-tx">Relatório</span></button>
+    <button type="button" class="aba" role="tab" id="aba-manual" data-v="manual" aria-selected="false"><span class="ab-ic">📖</span><span class="ab-tx">Manual</span></button>
+    <a class="aba" href="admin.html" style="text-decoration:none"><span class="ab-ic">🔒</span><span class="ab-tx">Admin</span></a>
   </nav>
 
   <div class="vista" id="vista-evidencia" hidden>
