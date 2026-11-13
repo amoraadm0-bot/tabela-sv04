@@ -13,6 +13,6 @@ const BAN_PERMANENTE = "perm";
 /* Recuperação de senha por e-mail (serviço gratuito EmailJS: emailjs.com).
    Preencha os 3 campos abaixo depois de criar a conta no EmailJS.
    Enquanto estiverem vazios, a recuperação funciona só pelo código de recuperação. */
-const EMAILJS_PUBLIC_KEY = "";
-const EMAILJS_SERVICE_ID = "";
-const EMAILJS_TEMPLATE_ID = "";
+const EMAILJS_PUBLIC_KEY = "AFc5mrnCckbJTajUG";
+const EMAILJS_SERVICE_ID = "service_cwmavni";
+const EMAILJS_TEMPLATE_ID = "template_i10le8j";
