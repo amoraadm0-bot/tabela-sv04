@@ -56,7 +56,7 @@ const EXPLICACOES = {
   "TSC": "Transferência Sem Consentimento (4.23): passar itens para o administrador sem ele aceitar. Prisão 10 min.",
   "ECI": "Ensino de Comandos Incorretos (4.24): ensinar comandos errados para outros jogadores para se beneficiar. Prisão 60 min | Ban 1 a 5 dias.",
   "TOS": "Violação dos Termos de Uso (4.25): aplicado após verificação do sistema de violações. Ban permanente.",
-  "Trabalhar sem fardamento": "Não existe um artigo próprio nas regras do jogo. Normalmente é regra interna da organização (PF, HP, EB, Mídia) e quem pune é a liderança dela. Se a regra da organização exigir farda e a pessoa descumprir numa ação, pode ser enquadrado como FAIL (4.22). Na dúvida, consulte a liderança.",
+  "Sem fardamento": "Regras das Facções 6.8: é proibido estar sem o uniforme da facção dentro das favelas. Punição: kick (2.2 — “chute sem fardamento”). Para polícia, exército e hospital, trabalhar sem uniforme no horário de serviço é regra interna da organização (punida pela liderança dela, com advertência ou desligamento).",
 };
 /* Situações que não estão na tabela, mas estão nas regras do Discord */
 const OUTRAS_REGRAS = [

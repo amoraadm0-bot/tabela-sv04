@@ -24,6 +24,7 @@ const SECOES = [
     linhas: [
       { infracao: "CF incompleto",    codigo: "2.2", punicao: "Kick", comando: "/kick [ID]" },
       { infracao: "Voltar para cela", codigo: "2.2", punicao: "Kick", comando: "/kick [ID]" },
+      { infracao: "Sem fardamento (facção na favela)", codigo: "2.2", punicao: "Kick", comando: "/kick [ID]" },
     ],
   },
 
@@ -63,7 +64,6 @@ const SECOES = [
       { infracao: "DMA",                       codigo: "4.18", punicao: "30 min",                      comando: "/jail [nick]" },
       { infracao: "NRA",                       codigo: "4.19", punicao: "20 min",                      comando: "/jail [nick]" },
       { infracao: "FAIL",                      codigo: "4.22", punicao: "60 min / 3 a 5 dias",         comando: "/jail [nick]" },
-      { infracao: "Trabalhar sem fardamento", codigo: "4.22", punicao: "60 min / 3 a 5 dias", comando: "/jail [nick]" },
       { infracao: "TSC",                       codigo: "4.23", punicao: "10 min",                      comando: "/jail [nick]" },
       { infracao: "ECI",                       codigo: "4.24", punicao: "60 min / 1 a 5 dias",         comando: "/jail [nick]" },
     ],
@@ -145,7 +145,7 @@ const AVISOS = [
    (o que estiver entre parênteses é ignorado).
    ===================================================================== */
 const SIGNIFICADOS = {
-  "Trabalhar sem fardamento": "Trabalhar em organização/corporação sem a farda obrigatória. Enquadrado como FAIL (4.22) — confirme com a liderança.",
+  "Sem fardamento": "Membro de facção sem o uniforme da facção dentro das favelas (Regras das Facções 6.8).",
   "CC": "Cortar Caminho: dirigir fora da via (calçada, grama, terreno) para encurtar caminho ou levar vantagem",
   "ABUSE": "Abuso de poder policial: usar a autoridade fora dos padrões do RP",
   "USE": "Uso indevido de veículo de trabalho ou de organização para fins pessoais",
@@ -192,7 +192,7 @@ const SIGNIFICADOS = {
    separadas por espaço. O nome da esquerda é igual ao nome da infração.
    ===================================================================== */
 const PALAVRAS_CHAVE = {
-  "Trabalhar sem fardamento": "farda fardamento fardado uniforme roupa trabalho trabalhando serviço sem",
+  "Sem fardamento": "farda fardamento favela fardado uniforme roupa trabalho trabalhando serviço sem",
   "CF incompleto": "cf incompleto",
   "Voltar para cela": "voltou cela fugiu cadeia prisão",
   "CC": "cortou cortar corta caminho calçada grama gramado terreno fora via encurtar",

@@ -93,6 +93,7 @@ body[data-aba="chat"] .btn-compacto{display:none!important}
 .opc-t small{color:var(--muted);font-size:12px}
 .opc-s{font-size:13px}
 .opc-e{font-size:12.5px;color:var(--muted);line-height:1.45}
+.regra-card details summary{cursor:pointer;color:var(--amber);font-size:13px}
 .chat-form{display:flex;gap:8px}
 .chat-form input{flex:1 1 auto;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px;font:16px var(--body)}
 .chat-form .btn-copiar{background:var(--discord)}
@@ -457,6 +458,8 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <button type="button" class="sug" data-chat-ex="id 18 vdm">id 18 vdm</button>
       <button type="button" class="sug" data-chat-ex="o que é rpfw">o que é rpfw</button>
       <button type="button" class="sug" data-chat-ex="o jogador saiu do jogo na ação">saiu do jogo na ação</button>
+      <button type="button" class="sug" data-chat-ex="regras de família">regras de família</button>
+      <button type="button" class="sug" data-chat-ex="regras das facções">regras das facções</button>
       <button type="button" class="sug" data-chat-ex="ajuda">ajuda</button>
     </div>
     <form id="chatForm" class="chat-form"><input id="chatIn" type="text" placeholder="Escreva aqui... ex.: id 18 vdm" autocomplete="off" autocapitalize="off" aria-label="Mensagem para o assistente"><button type="submit" class="btn-copiar">Enviar</button></form>
@@ -731,7 +734,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
 </div>
 
 <!-- Carrega sempre a versão mais nova do dados.js -->
-<script>document.write('<script src="dados.js?t=' + Date.now() + '"><\/script><script src="config.js?t=' + Date.now() + '"><\/script><script src="explicacoes.js?t=' + Date.now() + '"><\/script>');</script>
+<script>document.write('<script src="dados.js?t=' + Date.now() + '"><\/script><script src="config.js?t=' + Date.now() + '"><\/script><script src="explicacoes.js?t=' + Date.now() + '"><\/script><script src="regras.js?t=' + Date.now() + '"><\/script>');</script>
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const curto = n => n.replace(/\s*\(.*?\)\s*/g, " ").trim();
@@ -984,11 +987,52 @@ function cartaoInfracao(i, id, opIdx) {
     <div class="resultado"><button type="button" class="mini" data-chat-evid="${i}" data-op="${opIdx ?? 0}">🧾 Montar evidência</button></div>
   </div>`;
 }
+/* 📜 Todas as regras do Discord (regras.js) */
+const RC = (typeof REGRAS_COMPLETAS !== "undefined") ? REGRAS_COMPLETAS : [];
+const RC_IDX = RC.map(r => ({ r, raizes: new Set(toks(r.t + " " + r.s + " " + r.b).map(raiz)), tit: new Set(toks(r.s + " " + r.b).map(raiz)) }));
+const PARAR_REG = new Set("jogador jogadores player regra regras proibido permitido punicao punição ficou estava fazendo".split(" "));
+function buscaRegras(texto, max) {
+  const q = toks(texto).filter(w => !/^\d+$/.test(w) && !PARAR_REG.has(w)).map(raiz); if (!q.length) return [];
+  return RC_IDX.map(x => { let pts = 0; q.forEach(t => { if (x.raizes.has(t)) pts += 1; if (x.tit.has(t)) pts += 1.5; }); return { x, pts: pts / Math.sqrt(q.length) }; })
+    .filter(o => o.pts >= 1).sort((a, b) => b.pts - a.pts).slice(0, max || 3).map(o => o.x.r);
+}
+function cartaoRegra(r) {
+  const curtoT = r.t.length > 450 ? r.t.slice(0, 447) + "…" : r.t;
+  return `<div class="chat-card regra-card" style="--c:var(--amber)">
+    <div class="duv-top"><b>${r.n ? esc(r.n) + " · " : ""}${esc(r.b || r.s)}</b><span>${esc(r.g)}</span></div>
+    ${r.s && r.s !== r.b ? `<span class="dica-log">${esc(r.s)}</span>` : ""}
+    <p style="white-space:pre-line">${esc(curtoT)}</p>
+    ${r.t.length > 450 ? `<details><summary>Ver regra inteira</summary><p style="white-space:pre-line">${esc(r.t)}</p></details>` : ""}
+    ${r.p && r.t.length > 450 ? `<p class="duv-pun"><b>Punição:</b> ${esc(r.p)}</p>` : ""}
+  </div>`;
+}
+function regraPorCodigo(cod) { return RC.filter(r => r.n === cod && r.g === "Regras do jogo")[0]; }
 function responder(texto) {
   const t = texto.trim(); if (!t) return;
   msgChat(esc(t), "eu"); const n = normA(t);
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
-  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i>"); return; }
+  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
+  // regra pelo número: "regra 8.30", "artigo 4.22", "6.8 facção"
+  const mNum = n.match(/\b(?:regra|artigo|art)?\s*(\d{1,2}\.\d{1,2})\b/);
+  if (mNum && /(regra|artigo|art\b|^\d+\.\d+$|fac|famil|policia|hospital|exercito|midia|acao|invas)/.test(n)) {
+    let lista = RC.filter(r => r.n === mNum[1]);
+    const grupoQ = n.replace(mNum[0], "");
+    if (lista.length > 1 && grupoQ.trim()) { const qq = toks(grupoQ).map(raiz); const f = lista.filter(r => qq.some(w => toks(r.b + " " + r.g).map(raiz).includes(w))); if (f.length) lista = f; }
+    if (lista.length) { msgChat(`Regra ${esc(mNum[1])}${lista.length > 1 ? " (aparece em mais de um lugar)" : ""}:` + lista.slice(0, 4).map(cartaoRegra).join("")); return; }
+  }
+  // "regras de família", "regras da polícia"...
+  const mBloco = n.match(/^regras?\s+(?:de|da|do|das|dos)?\s*(.+)$/);
+  if (mBloco) {
+    const alvo = toks(mBloco[1]).map(raiz);
+    const blocos = [...new Set(RC.map(r => r.b))].filter(b => alvo.some(w => toks(b).map(raiz).includes(w)));
+    if (blocos.length) {
+      const itens = RC.filter(r => blocos.includes(r.b));
+      msgChat(`<b>${esc(blocos.join(" · "))}</b> — ${itens.length} regras. Toque para ver ou escreva o número (ex.: <i>regra ${esc(itens.find(r => r.n) ? itens.find(r => r.n).n : "1.1")}</i>).<div class="chat-num">` +
+        itens.slice(0, 40).map((r, k) => `<button type="button" class="opc" data-regra="${RC.indexOf(r)}" style="--c:var(--amber)"><span class="opc-n" style="width:auto;padding:0 8px;border-radius:999px">${esc(r.n || "•")}</span><span class="opc-t"><span class="opc-s">${esc(r.t.split("\n")[0].slice(0, 140))}</span>${r.p ? `<small>Punição: ${esc(r.p.slice(0, 90))}</small>` : ""}</span></button>`).join("") +
+        (itens.length > 40 ? `<p class="dica-log">Mostrando 40 de ${itens.length}. Pergunte algo mais específico para achar o resto.</p>` : "") + "</div>");
+      return;
+    }
+  }
   // resposta com número (escolha da lista)
   const num = n.match(/^(?:opcao|opção|numero|número|n)?\s*([1-9])$/);
   if (num && CTX.opcoes && CTX.opcoes[+num[1] - 1] !== undefined) { CTX.inf = CTX.opcoes[+num[1] - 1]; CTX.opcoes = null; msgChat(cartaoInfracao(CTX.inf, CTX.id, 0)); return; }
@@ -1013,15 +1057,19 @@ function responder(texto) {
   if (inf >= 0) {
     CTX.inf = inf;
     const intro = perguntaSignif ? "Aqui está:" : CTX.id ? `Entendi: jogador <b>${esc(CTX.id)}</b>, ${esc(curto(LISTA[inf].infracao))}.` : `Entendi: ${esc(curto(LISTA[inf].infracao))}.`;
-    msgChat(intro + cartaoInfracao(inf, perguntaSignif && !id ? CTX.id : CTX.id, reinc ? (+reinc[1]) - 1 : 0)); return;
+    const rc = perguntaSignif ? regraPorCodigo(LISTA[inf].codigo) : null;
+    msgChat(intro + cartaoInfracao(inf, CTX.id, reinc ? (+reinc[1]) - 1 : 0) + (rc ? "<p class='dica-log' style='margin-top:8px'>📜 Regra completa no Discord:</p>" + cartaoRegra(rc) : "")); return;
   }
   // texto livre: usa o "Tirar dúvida"
   const livre = toksT.filter((w, k) => !usados.has(k)).join(" ");
   const res = rankDuvida(livre), q = new Set(toks(livre).filter(w => !/^\d+$/.test(w)).map(raiz));
   const extras = OUTRAS.filter(o => toks(o.palavras + " " + o.titulo).some(w => q.has(raiz(w))));
+  const regrasRel = buscaRegras(livre, 3);
+  const blocoRegras = regrasRel.length ? "<p class='dica-log' style='margin-top:8px'>📜 Regras do Discord relacionadas:</p>" + regrasRel.map(cartaoRegra).join("") : "";
+  if (!res.length && !extras.length && regrasRel.length) { msgChat("Não é uma infração da tabela, mas achei nas regras do Discord:" + regrasRel.map(cartaoRegra).join("")); return; }
   if (!res.length && !extras.length) { msgChat(id ? `Anotei o ID <b>${esc(id)}</b>. Agora me diga o que ele fez ou a sigla (ex.: <i>vdm</i>).` : "Não entendi bem. Tente: <i>id 18 vdm</i>, <i>o que é MG</i> ou conte o que aconteceu (ex.: <i>atirou sem motivo</i>)."); return; }
   if (extras.length && (!res.length || res[0].pts <= 2)) { msgChat(extras.map(o => `<div class="chat-card" style="--c:var(--amber)"><div class="duv-top"><b>${esc(o.titulo)}</b><span>fora da tabela</span></div><p>${esc(o.texto)}</p></div>`).join("")); if (!res.length) return; }
-  if (res.length && (res.length === 1 || res[0].pts >= res[1].pts + 2)) { CTX.inf = res[0].i; msgChat("Pelo que você contou, o mais provável é:" + cartaoInfracao(res[0].i, CTX.id, 0)); return; }
+  if (res.length && (res.length === 1 || res[0].pts >= res[1].pts + 2)) { CTX.inf = res[0].i; msgChat("Pelo que você contou, o mais provável é:" + cartaoInfracao(res[0].i, CTX.id, 0) + blocoRegras); return; }
   CTX.opcoes = res.map(x => x.i);
   msgChat("Pode ser uma destas. Qual combina mais? Toque na opção ou responda com o número.<div class='chat-num'>" + res.map((x, n) => {
     const sec = (SECOES.find(s => s.id === SECAO_DE.get(x.r)) || {}).titulo || "";
@@ -1032,7 +1080,7 @@ function responder(texto) {
       ${signif(x.r) ? `<span class="opc-s">${esc(signif(x.r))}</span>` : ""}
       ${ex ? `<span class="opc-e">${esc(ex.length > 220 ? ex.slice(0, 217) + "…" : ex)}</span>` : ""}</span>
     </button>`;
-  }).join("") + "</div>");
+  }).join("") + "</div>" + blocoRegras);
 }
 document.getElementById("chatForm").addEventListener("submit", e => { e.preventDefault(); const v = chatIn.value; chatIn.value = ""; responder(v); chatIn.focus(); });
 chatLista.addEventListener("click", e => {
@@ -1040,6 +1088,8 @@ chatLista.addEventListener("click", e => {
   if (cp) { const t = cp.dataset.copiar; try { navigator.clipboard.writeText(t).then(() => { cp.textContent = "Copiado!"; setTimeout(() => cp.textContent = "Copiar", 1100); }); } catch (_) {} return; }
   const op = e.target.closest("[data-chat-op]");
   if (op) { const card = op.closest(".chat-card"); card.outerHTML = cartaoInfracao(+op.dataset.i, CTX.id, +op.dataset.chatOp); return; }
+  const rg = e.target.closest("[data-regra]");
+  if (rg) { const r = RC[+rg.dataset.regra]; msgChat(esc(r.n ? "regra " + r.n : "regra"), "eu"); msgChat(cartaoRegra(r)); return; }
   const es = e.target.closest("[data-chat-esc]");
   if (es) { CTX.inf = +es.dataset.chatEsc; CTX.opcoes = null; msgChat(esc(curto(LISTA[CTX.inf].infracao)), "eu"); msgChat(cartaoInfracao(CTX.inf, CTX.id, 0)); return; }
   const ev = e.target.closest("[data-chat-evid]");
