@@ -1628,52 +1628,54 @@ const R_IDS = ["rLider","rData","rAdms","rHP","rPF","rPFini","rPFfim","rEB","rEB
 const R_FICA = ["rLider","rAdms","rComunicar"];   // continuam preenchidos no próximo relatório
 const rv = id => document.getElementById(id).value.trim();
 function textoRel() {
-  return `RELATÓRIO DE LÍDERES DE TURNO
+  const pfArm = (rv("rPFini") || rv("rPFfim")) ? `\n\nInício: • Armamento: ${rv("rPFini")}\nFinal: • Armamento: ${rv("rPFfim")}` : "";
+  const ebArm = rv("rEBarm") ? `\n\n• Armamento: ${rv("rEBarm")}` : "";
+  const linhas = id => rv(id).split(/\n|;\s*/).map(s => s.trim()).filter(Boolean).join("\n");
+  return `# 📋 RELATÓRIO DE LÍDERES DE TURNO 🐬
 
-Líder de Turno: ${rv("rLider")}
+👑 Líder de Turno: ${rv("rLider")}
 
-Administradores em turno: ${rv("rAdms").split("\n").map(s => s.trim()).filter(Boolean).join(" ")}
+📍 Administradores em turno:
+${linhas("rAdms")}
 
-ORGANIZAÇÕES
+🏢 ORGANIZAÇÕES
 
-HP: ${rv("rHP")}
+🏥 HP: ${rv("rHP")}
 
-PF: ${rv("rPF")}
+🚓 PF: ${rv("rPF")}${pfArm}
 
-Início: • Armamento: ${rv("rPFini")}
-Final: • Armamento: ${rv("rPFfim")}
+🪖 EB: ${rv("rEB")}${ebArm}
 
-EB: ${rv("rEB")}
+📷 Mídia: ${rv("rMidia")}
 
-• Armamento: ${rv("rEBarm")}
+⚔️ FACÇÕES / MÁFIAS / FAMÍLIAS
 
-Mídia: ${rv("rMidia")}
-
-FACÇÕES / MÁFIAS / FAMÍLIAS
-
-Roxos: ${rv("rRoxos")}
+🟣 Roxos: ${rv("rRoxos")}
 
 Dinheiro: ${rv("rRoxosDin")}
 Material: ${rv("rRoxosMat")}
 
-Verdes: ${rv("rVerdes")}
+🟢 Verdes: ${rv("rVerdes")}
 
 Dinheiro: ${rv("rVerdesDin")}
 Material: ${rv("rVerdesMat")}
 
-KUSH'$: ${rv("rKush")}
+🏯 KUSH'$: ${rv("rKush")}
 
-Los_Santos: ${rv("rLS")}
+🏯 Los_Santos: ${rv("rLS")}
 
-Famílias: ${rv("rFam")}
+🏠 Famílias: ${rv("rFam")}
 
-Observação do turno: ${rv("rObs")}
+📍 Observação do turno:
+${rv("rObs")}
 
-Punições Aplicadas: ${rv("rPun")}
+Punições Aplicadas:
+${linhas("rPun")}
 
-Data: ${rv("rData")}
+🗓️ Data: ${rv("rData")}
 
-Comunicar à liderança: ${rv("rComunicar")}`;
+📢 Comunicar à liderança:
+${linhas("rComunicar") || "@LÍDER S04 | Joker\n@ADMIN⁰⁴ | Safira"}`;
 }
 function atualizarRel() {
   document.getElementById("relPronto").value = textoRel();
@@ -1686,7 +1688,7 @@ document.getElementById("rPuxar").addEventListener("click", () => {
   if (!ATUAL) { b.textContent = "Entre com seu nome de ADM na aba Tabela"; setTimeout(() => b.textContent = "↓ Puxar dos meus logs de hoje", 2500); return; }
   const ini = new Date(); ini.setHours(0, 0, 0, 0);
   const linhas = PERFIS[ATUAL].logs.filter(l => l.quando >= ini.getTime()).reverse()
-    .map(l => { const regra = (l.texto.match(/REGRA:\s*([\d.]+)/) || l.texto.match(/\|\s*([\d.]+)/) || [])[1] || ""; return `${(l.nomes || "").split("\n").join(", ")} - ${l.motivo || ""}${regra ? " (" + regra + ")" : ""}`; });
+    .map(l => { const regra = (l.texto.match(/REGRA:\s*([\d.]+)/) || l.texto.match(/\|\s*([\d.]+)/) || [])[1] || ""; return `@${PERFIS[ATUAL].nome} | ${l.motivo || ""}${regra ? " | " + regra : ""}`; });
   if (!linhas.length) { b.textContent = "Nenhum log salvo hoje"; setTimeout(() => b.textContent = "↓ Puxar dos meus logs de hoje", 2000); return; }
   document.getElementById("rPun").value = "\n" + linhas.join("\n"); atualizarRel();
 });
