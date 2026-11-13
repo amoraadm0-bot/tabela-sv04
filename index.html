@@ -67,6 +67,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .engrenagem:hover{border-color:var(--accent)}
 .engrenagem:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dica-log{margin:0;font-size:13px;color:var(--muted)}
+.lg-escolha{width:100%;font-weight:600;color:var(--fg)}
+#salvarLog{background:var(--accent-soft);border:1px solid var(--accent)}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:auto;padding-block:max(24px,env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #gate[hidden]{display:none!important}
 body.travado{overflow:hidden}
@@ -273,9 +275,9 @@ body.travado{overflow:hidden}
       <ol>
         <li>Depois de montar o comando, desça até <b>Monte sua evidência</b>. O nick, o motivo, a regra e o tempo já vêm preenchidos.</li>
         <li>Escolha o <b>modelo</b> do canal onde vai postar (ex.: Registro de Prisão / Mute, Solicito banimento IP, Punição removida).</li>
-        <li>Cole o <b>link do Drive</b> em Evidências, preencha a observação se tiver e toque em <b>📤 Copiar e abrir no Discord</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
+        <li>Cole o <b>link do Drive</b> em Evidências, preencha a observação se tiver e toque em <b>📤 Enviar agora</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
         <li>No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</li>
-        <li><b>Está no jogo e vai mandar depois?</b> Toque em <b>💾 Salvar log</b>. Os logs ficam em <b>Meus logs salvos</b>, separados por ADM. Depois é só tocar em <b>📤 Copiar e abrir no Discord</b> em cada um: ele copia, abre o canal certo e marca como enviado.</li>
+        <li><b>Está no jogo e vai mandar depois?</b> Toque em <b>💾 Salvar para enviar depois</b>. Os logs ficam em <b>Meus logs salvos</b>, separados por ADM. Depois é só tocar em <b>📤 Copiar e abrir no Discord</b> em cada um: ele copia, abre o canal certo e marca como enviado.</li>
         <li>Mais de um jogador? Coloque um nick por linha. Para o próximo log, toque em <b>Limpar para o próximo</b>.</li>
         <li>Servidor, "Informar" e "Aplicada por" ficam salvos no seu celular. Se o app fechar sem querer, o que você preencheu volta quando abrir de novo.</li>
       </ol>
@@ -378,9 +380,10 @@ body.travado{overflow:hidden}
     <label class="lg-lab">Log pronto<textarea id="logPronto" rows="9" readonly></textarea></label>
     <label class="lg-lab">Enviar para o canal<select id="lCanal" class="lg-sel"></select></label>
     <div class="resultado">
-      <button type="button" id="salvarLog" class="btn-copiar">💾 Salvar log</button>
-      <a id="enviarDc" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none">📤 Copiar e abrir no Discord</a>
-      <button type="button" id="copiarLog" class="mini">Só copiar</button>
+      <p class="dica-log lg-escolha">O que você quer fazer com este log?</p>
+      <button type="button" id="salvarLog" class="btn-copiar btn-sec">💾 Salvar para enviar depois</button>
+      <a id="enviarDc" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none">📤 Enviar agora (abre o Discord)</a>
+      <button type="button" id="copiarLog" class="mini">📋 Só copiar</button>
       <button type="button" id="lLimpar" class="mini">Limpar para o próximo</button>
     </div>
     <div id="salvosBox" class="salvos" hidden></div>
@@ -573,7 +576,7 @@ document.getElementById("lLimpar").addEventListener("click", () => {
 });
 document.getElementById("copiarLog").addEventListener("click", () => {
   const t = document.getElementById("logPronto").value, b = document.getElementById("copiarLog");
-  const ok = () => { b.textContent = "Copiado!"; setTimeout(() => b.textContent = "Só copiar", 1100); };
+  const ok = () => { b.textContent = "Copiado!"; setTimeout(() => b.textContent = "📋 Só copiar", 1100); };
   const sel = () => { const a = document.getElementById("logPronto"); a.focus(); a.select(); };
   try { navigator.clipboard.writeText(t).then(ok, sel); } catch (_) { sel(); }
 });
@@ -675,7 +678,7 @@ document.getElementById("salvarLog").addEventListener("click", () => {
   if (!ATUAL) { desenharPerfil(); return; }
   PERFIS[ATUAL].logs.unshift({ id: Date.now(), quando: Date.now(), modelo: v("lModelo"), canal: selCanal.value, nomes: v("lNomes"), motivo: v("lMotivo"), texto: document.getElementById("logPronto").value, enviado: false });
   salvarPerfis(); filtroLogs = "pend"; desenharSalvos();
-  b.textContent = "Salvo! ✓"; setTimeout(() => b.textContent = "💾 Salvar log", 1200);
+  b.textContent = "Salvo! ✓"; setTimeout(() => b.textContent = "💾 Salvar para enviar depois", 1200);
 });
 function desenharSalvos() {
   if (!ATUAL) return;
@@ -698,7 +701,7 @@ function desenharSalvos() {
         <a class="btn-copiar" data-a="dc" href="https://discord.com/channels/${DC_SERVIDOR}/${l.canal}" target="_blank" rel="noopener" style="text-decoration:none;padding:9px 14px;font-size:14px">📤 Copiar e abrir no Discord</a>
         <button type="button" class="mini" data-a="env">${l.enviado ? "Marcar como não enviado" : "Marcar como enviado"}</button>
         <button type="button" class="mini perigo-mini" data-a="del">Apagar</button>
-      </div></div>`).join("") : `<p class="dica-log">${filtroLogs === "pend" ? "Nenhum log esperando envio. Monte um acima e toque em 💾 Salvar log." : "Nada aqui ainda."}</p>`}
+      </div></div>`).join("") : `<p class="dica-log">${filtroLogs === "pend" ? "Nenhum log esperando envio. Monte um acima e toque em 💾 Salvar para enviar depois." : "Nada aqui ainda."}</p>`}
     <p class="dica-log">Os logs ficam salvos só neste celular.</p>`;
 }
 let apagarLogPend = null;
