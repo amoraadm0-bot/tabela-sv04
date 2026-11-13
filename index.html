@@ -217,6 +217,7 @@ tbody tr[data-k] .chip{border-color:var(--c)!important}
 /* Abas com cor própria */
 #aba-tabela[aria-selected="true"]{border-bottom-color:var(--teal)}
 #aba-relatorio[aria-selected="true"]{border-bottom-color:var(--violet)}
+#aba-evidencia[aria-selected="true"]{border-bottom-color:var(--amber)}
 #aba-manual[aria-selected="true"]{border-bottom-color:var(--amber)}
 .note{border-left-color:var(--amber)} .note b{color:var(--amber)}
 #instalar{background:var(--amber);color:#2a1a02}
@@ -306,11 +307,55 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
 
   <nav class="abas" role="tablist" aria-label="Páginas">
     <button type="button" class="aba" role="tab" id="aba-tabela" data-v="tabela" aria-selected="true">Tabela</button>
+    <button type="button" class="aba" role="tab" id="aba-evidencia" data-v="evidencia" aria-selected="false">🧾 Montar evidência</button>
     <button type="button" class="aba" role="tab" id="aba-relatorio" data-v="relatorio" aria-selected="false">📝 Relatório de turno</button>
     <button type="button" class="aba" role="tab" id="aba-manual" data-v="manual" aria-selected="false">📖 Manual do usuário</button>
     <a class="aba" href="admin.html" style="text-decoration:none">🔒 Acesso administrativo</a>
   </nav>
 
+  <div class="vista" id="vista-evidencia" hidden>
+  <section class="montar" id="montarLog" aria-labelledby="logTit">
+    <h2 id="logTit">Monte sua evidência</h2>
+    <div id="perfilBox"></div>
+    <p class="dica-log">Puxa sozinho o nick, o motivo, a regra e o tempo do Montar comando (aba Tabela). Confira, cole o link das evidências e copie para o canal de logs.</p>
+    <div id="logCampos" class="log-grid">
+      <label class="lg-full">Modelo do log<select id="lModelo"></select></label>
+      <label data-campo="lAplicador">Aplicada por<input id="lAplicador" type="text" placeholder="ex.: @ADM Amora" autocomplete="off"></label>
+      <label data-campo="lNomes" class="lg-full">Nome(s) do(s) jogador(es) — um por linha<textarea id="lNomes" rows="2"></textarea></label>
+      <label data-campo="lTempo">Tempo<input id="lTempo" type="text" placeholder="ex.: 40 ou 30 Dias" autocomplete="off"></label>
+      <label data-campo="lPunicao">Punição<input id="lPunicao" type="text" autocomplete="off"></label>
+      <label data-campo="lMotivo">Motivo<input id="lMotivo" type="text" autocomplete="off"></label>
+      <label data-campo="lRegra">Regra<input id="lRegra" type="text" placeholder="ex.: 4.3" autocomplete="off"></label>
+      <label data-campo="lServ">Servidor<input id="lServ" type="text" autocomplete="off"></label>
+      <label data-campo="lData">Data do ocorrido<span class="lg-linha"><input id="lData" type="text" autocomplete="off"><button type="button" id="lHoje" class="mini">Hoje</button></span></label>
+      <label data-campo="lInformar">Informar<input id="lInformar" type="text" placeholder="ex.: @LÍDER S04" autocomplete="off"></label>
+      <label data-campo="lRemocao" class="lg-full">Motivo da remoção<input id="lRemocao" type="text" autocomplete="off"></label>
+      <label data-campo="lObs" class="lg-full">Observação<input id="lObs" type="text" autocomplete="off"></label>
+      <div data-campo="lEvid" class="lg-full drv">
+        <label>Evidências (vídeo, foto ou link)<textarea id="lEvid" rows="1" placeholder="https://drive.google.com/..." autocomplete="off"></textarea></label>
+        <div class="drv-bts">
+          <button type="button" id="drvBotao" class="btn-copiar" style="padding:9px 14px;font-size:14px">⬆️ Enviar vídeo ou foto</button>
+          <a class="mini" href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener" style="text-decoration:none">📁 Abrir Drive</a>
+          <button type="button" id="drvColar" class="mini">📋 Colar link</button>
+        </div>
+        <input id="drvArquivo" type="file" accept="video/*,image/*" multiple hidden>
+        <div id="drvProg" class="drv-prog" hidden><div id="drvBarra"></div></div>
+        <p id="drvMsg" class="dica-log" hidden></p>
+      </div>
+    </div>
+    <label class="lg-lab">Log pronto<textarea id="logPronto" rows="9" readonly></textarea></label>
+    <label class="lg-lab">Enviar para o canal<select id="lCanal" class="lg-sel"></select></label>
+    <div class="resultado">
+      <p class="dica-log lg-escolha">O que você quer fazer com este log?</p>
+      <button type="button" id="salvarLog" class="btn-copiar btn-sec">💾 Salvar para enviar depois</button>
+      <a id="enviarDc" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none">📤 Enviar agora (abre o Discord)</a>
+      <button type="button" id="copiarLog" class="mini">📋 Só copiar</button>
+      <button type="button" id="lLimpar" class="mini">Limpar para o próximo</button>
+    </div>
+    <div id="salvosBox" class="salvos" hidden></div>
+    <p class="dica-log" id="dcAviso" hidden>Log copiado! No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</p>
+  </section>
+  </div>
   <div class="vista" id="vista-relatorio" hidden>
   <section class="montar" aria-labelledby="relTit">
     <h2 id="relTit">Relatório de turno</h2>
@@ -389,7 +434,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
 
       <h3>Montar o log / evidência</h3>
       <ol>
-        <li>Depois de montar o comando, desça até <b>Monte sua evidência</b>. O nick, o motivo, a regra e o tempo já vêm preenchidos.</li>
+        <li>Depois de montar o comando, toque em <b>🧾 Montar evidência desta punição →</b> (ou abra a aba <b>🧾 Montar evidência</b>). O nick, o motivo, a regra e o tempo já vêm preenchidos.</li>
         <li>Escolha o <b>modelo</b> do canal onde vai postar (ex.: Registro de Prisão / Mute, Solicito banimento IP, Punição removida).</li>
         <li>Em <b>Evidências</b>, toque em <b>⬆️ Enviar vídeo ou foto</b>, entre com a sua conta Google e escolha um ou mais vídeos/fotos. Ele vai para a pasta <b>Evidências ADM Rio Rise</b> no <b>seu</b> Drive, o link é liberado e já entra no log sozinho. Se preferir, use <b>📁 Abrir Drive</b>, suba lá, copie o link e toque em <b>📋 Colar link</b>.</li>
         <li>Preencha a observação se tiver e toque em <b>📤 Enviar agora</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
@@ -477,50 +522,11 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
     <div class="resultado">
       <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
       <button type="button" id="copiarPronto" disabled>Copiar</button>
+      <button type="button" id="irEvidencia" class="mini">🧾 Montar evidência desta punição →</button>
     </div>
   </section>
 
-  <section class="montar" id="montarLog" aria-labelledby="logTit">
-    <h2 id="logTit">Monte sua evidência</h2>
-    <div id="perfilBox"></div>
-    <p class="dica-log">Puxa sozinho o nick, o motivo, a regra e o tempo do quadro de cima. Confira, cole o link das evidências e copie para o canal de logs.</p>
-    <div id="logCampos" class="log-grid">
-      <label class="lg-full">Modelo do log<select id="lModelo"></select></label>
-      <label data-campo="lAplicador">Aplicada por<input id="lAplicador" type="text" placeholder="ex.: @ADM Amora" autocomplete="off"></label>
-      <label data-campo="lNomes" class="lg-full">Nome(s) do(s) jogador(es) — um por linha<textarea id="lNomes" rows="2"></textarea></label>
-      <label data-campo="lTempo">Tempo<input id="lTempo" type="text" placeholder="ex.: 40 ou 30 Dias" autocomplete="off"></label>
-      <label data-campo="lPunicao">Punição<input id="lPunicao" type="text" autocomplete="off"></label>
-      <label data-campo="lMotivo">Motivo<input id="lMotivo" type="text" autocomplete="off"></label>
-      <label data-campo="lRegra">Regra<input id="lRegra" type="text" placeholder="ex.: 4.3" autocomplete="off"></label>
-      <label data-campo="lServ">Servidor<input id="lServ" type="text" autocomplete="off"></label>
-      <label data-campo="lData">Data do ocorrido<span class="lg-linha"><input id="lData" type="text" autocomplete="off"><button type="button" id="lHoje" class="mini">Hoje</button></span></label>
-      <label data-campo="lInformar">Informar<input id="lInformar" type="text" placeholder="ex.: @LÍDER S04" autocomplete="off"></label>
-      <label data-campo="lRemocao" class="lg-full">Motivo da remoção<input id="lRemocao" type="text" autocomplete="off"></label>
-      <label data-campo="lObs" class="lg-full">Observação<input id="lObs" type="text" autocomplete="off"></label>
-      <div data-campo="lEvid" class="lg-full drv">
-        <label>Evidências (vídeo, foto ou link)<textarea id="lEvid" rows="1" placeholder="https://drive.google.com/..." autocomplete="off"></textarea></label>
-        <div class="drv-bts">
-          <button type="button" id="drvBotao" class="btn-copiar" style="padding:9px 14px;font-size:14px">⬆️ Enviar vídeo ou foto</button>
-          <a class="mini" href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener" style="text-decoration:none">📁 Abrir Drive</a>
-          <button type="button" id="drvColar" class="mini">📋 Colar link</button>
-        </div>
-        <input id="drvArquivo" type="file" accept="video/*,image/*" multiple hidden>
-        <div id="drvProg" class="drv-prog" hidden><div id="drvBarra"></div></div>
-        <p id="drvMsg" class="dica-log" hidden></p>
-      </div>
-    </div>
-    <label class="lg-lab">Log pronto<textarea id="logPronto" rows="9" readonly></textarea></label>
-    <label class="lg-lab">Enviar para o canal<select id="lCanal" class="lg-sel"></select></label>
-    <div class="resultado">
-      <p class="dica-log lg-escolha">O que você quer fazer com este log?</p>
-      <button type="button" id="salvarLog" class="btn-copiar btn-sec">💾 Salvar para enviar depois</button>
-      <a id="enviarDc" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none">📤 Enviar agora (abre o Discord)</a>
-      <button type="button" id="copiarLog" class="mini">📋 Só copiar</button>
-      <button type="button" id="lLimpar" class="mini">Limpar para o próximo</button>
-    </div>
-    <div id="salvosBox" class="salvos" hidden></div>
-    <p class="dica-log" id="dcAviso" hidden>Log copiado! No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</p>
-  </section>
+
 
   <div class="tools">
     <input id="q" type="search" placeholder="Buscar por sigla, código ou nome (ex.: VDM, 4.3, corta caminho)" aria-label="Buscar infração">
@@ -607,7 +613,7 @@ const jogador = document.getElementById("jogador"), pronto = document.getElement
 function montar() {
   const r = LISTA[selInf.value], n = jogador.value.trim();
   if (!r) { pronto.textContent = "Digite o nick e escolha a infração"; pronto.className = "vazio"; copiar.disabled = true; return; }
-  if (!r.comando) { pronto.textContent = "Admin Level 1 não tem comando para isso. Peça a um superior e use o quadro \"Monte sua evidência\" abaixo para solicitar."; pronto.className = "vazio"; copiar.disabled = true; return; }
+  if (!r.comando) { pronto.textContent = "Admin Level 1 não tem comando para isso. Peça a um superior e use a aba \"🧾 Montar evidência\" para solicitar."; pronto.className = "vazio"; copiar.disabled = true; return; }
   const t = completo(r, document.getElementById("tempoCmd").value.trim());
   pronto.textContent = n ? t.replace(/\[(nick|ID)\]|\{ID\}/g, n) : t;
   pronto.className = ""; copiar.disabled = false;
@@ -616,6 +622,7 @@ jogador.addEventListener("input", montar);
 let infTempo = "";
 function ajustarTempo() { if (selInf.value !== infTempo) { infTempo = selInf.value; const r = LISTA[selInf.value]; document.getElementById("tempoCmd").value = r ? tempoPadrao(r) : ""; } }
 document.getElementById("tempoCmd").addEventListener("input", montar);
+document.getElementById("irEvidencia").addEventListener("click", () => { puxarDoComando(); atualizarLog(); mostrar("evidencia"); history.replaceState(history.state, "", "#evidencia"); window.scrollTo(0, 0); });
 selInf.addEventListener("change", () => { ajustarTempo(); marcarSug(); montar(); });
 
 // Preenchimento automático pelo "O que aconteceu?"
@@ -1194,6 +1201,7 @@ function mostrar(v) {
   document.getElementById("vista-tabela").hidden = v !== "tabela";
   document.getElementById("vista-manual").hidden = v !== "manual";
   document.getElementById("vista-relatorio").hidden = v !== "relatorio";
+  document.getElementById("vista-evidencia").hidden = v !== "evidencia";
   document.querySelectorAll("button.aba").forEach(a => a.setAttribute("aria-selected", a.dataset.v === v));
 }
 document.querySelectorAll("button.aba").forEach(a => a.addEventListener("click", () => {
@@ -1201,6 +1209,7 @@ document.querySelectorAll("button.aba").forEach(a => a.addEventListener("click",
 }));
 if (location.hash === "#manual") mostrar("manual");
 if (location.hash === "#relatorio") mostrar("relatorio");
+if (location.hash === "#evidencia") mostrar("evidencia");
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 document.getElementById("q").addEventListener("input", e => {
