@@ -432,7 +432,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <button type="button" id="salvarLog" class="btn-copiar btn-sec">💾 Salvar para enviar depois</button>
       <a id="enviarDc" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none">📤 Enviar agora (abre o Discord)</a>
       <button type="button" id="copiarLog" class="mini">📋 Só copiar</button>
-      <button type="button" id="lLimpar" class="mini">Limpar para o próximo</button>
+      <button type="button" id="lLimpar" class="mini">🧹 Limpar campos</button>
     </div>
     <div id="salvosBox" class="salvos" hidden></div>
     <p class="dica-log" id="dcAviso" hidden>Log copiado! No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</p>
@@ -522,7 +522,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
         <li>Preencha a observação se tiver e toque em <b>📤 Enviar agora</b>. O log é copiado e o Discord abre direto no canal certo (dá para trocar o canal na lista "Enviar para o canal").</li>
         <li>No Discord, toque e segure na caixa de mensagem → <b>Colar</b>, anexe o vídeo e envie.</li>
         <li><b>Está no jogo e vai mandar depois?</b> Toque em <b>💾 Salvar para enviar depois</b>. Os logs ficam em <b>Meus logs salvos</b>, separados por ADM. Depois é só tocar em <b>📤 Copiar e abrir no Discord</b> em cada um: ele copia, abre o canal certo e marca como enviado.</li>
-        <li>Mais de um jogador? Coloque um nick por linha. Para o próximo log, toque em <b>Limpar para o próximo</b>.</li>
+        <li>Mais de um jogador? Coloque um nick por linha. Para começar outro, toque em <b>🧹 Limpar campos</b> (na Tabela ou na Evidência). Ao tocar em <b>Sair</b> da conta, todos os campos são limpos sozinhos.</li>
         <li>Servidor, "Informar" e "Aplicada por" ficam salvos no seu celular. Se o app fechar sem querer, o que você preencheu volta quando abrir de novo.</li>
       </ol>
 
@@ -605,6 +605,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
       <button type="button" id="copiarPronto" disabled>Copiar</button>
       <button type="button" id="irEvidencia" class="mini">🧾 Montar evidência desta punição →</button>
+      <button type="button" id="limparTudo" class="mini">🧹 Limpar campos</button>
     </div>
   </section>
 
@@ -798,10 +799,33 @@ document.getElementById("lModelo").innerHTML = Object.entries(MODELOS).map(([k, 
 document.getElementById("logCampos").addEventListener("input", atualizarLog);
 document.getElementById("logCampos").addEventListener("change", () => { puxarDoComando(); atualizarLog(); });
 document.getElementById("lHoje").addEventListener("click", () => { document.getElementById("lData").value = hoje(); atualizarLog(); });
-document.getElementById("lLimpar").addEventListener("click", () => {
+/* Limpar campos: comando + evidência (e o relatório quando sai da conta) */
+function limparCampos(saindo) {
+  ["jogador", "aconteceu", "tempoCmd"].forEach(id => document.getElementById(id).value = "");
+  selInf.value = ""; infTempo = ""; ultimaInf = "";
+  const sb = document.getElementById("sugestoes"); sb.hidden = true; sb.innerHTML = "";
+  montar();
   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lEvid", "lPunicao", "lRemocao"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("lData").value = hoje(); atualizarLog();
-});
+  if (saindo) ["lAplicador", "lInformar"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("lData").value = hoje();
+  if (typeof ANEXOS !== "undefined") { ANEXOS.forEach(a => URL.revokeObjectURL(a.url)); ANEXOS = []; desenharAnexos(); }
+  const dm = document.getElementById("drvMsg"); if (dm) dm.hidden = true;
+  atualizarLog();
+  if (saindo && typeof R_IDS !== "undefined") {
+    R_IDS.forEach(id => document.getElementById(id).value = ""); document.getElementById("rData").value = hoje(); atualizarRel();
+    try { localStorage.removeItem("adm_relatorio"); } catch (_) {}
+  }
+  try { localStorage.removeItem("adm_log"); } catch (_) {}
+  guardarLog();
+}
+const avisoLimpo = () => { const t = document.getElementById("toast"); t.textContent = "🧹 Campos limpos"; t.hidden = false; setTimeout(() => t.hidden = true, 1500); };
+let limparPend = null;
+function pedirLimpar(b) {
+  if (limparPend !== b) { limparPend = b; const o = b.textContent; b.dataset.orig = o; b.textContent = "Limpar tudo? Toque de novo"; setTimeout(() => { if (limparPend === b) { limparPend = null; b.textContent = b.dataset.orig; } }, 3000); return; }
+  limparPend = null; b.textContent = b.dataset.orig; limparCampos(false); avisoLimpo();
+}
+document.getElementById("lLimpar").addEventListener("click", e => pedirLimpar(e.currentTarget));
+document.getElementById("limparTudo").addEventListener("click", e => pedirLimpar(e.currentTarget));
 document.getElementById("copiarLog").addEventListener("click", () => {
   const t = document.getElementById("logPronto").value, b = document.getElementById("copiarLog");
   const ok = () => { b.textContent = "Copiado!"; setTimeout(() => b.textContent = "📋 Só copiar", 1100); };
@@ -941,6 +965,7 @@ document.getElementById("gEntrar").addEventListener("click", gateEnviar);
 document.addEventListener("click", async e => {
   if (e.target.id === "pCod" && ATUAL) { const cod = gerarCodigo(); PERFIS[ATUAL].rec = await hashCod(cod); gravarJ("adm_perfis", PERFIS); mostrarCodigo(cod, null); return; }
   if (e.target.id !== "pSair" && e.target.id !== "pSair2") return;
+  limparCampos(true);   // ao sair da conta, limpa tudo para o próximo ADM não ver
   ATUAL = null; gravarJ("adm_atual", null); modoGate("entrar"); desenharPerfil();
 });
 modoGate(Object.keys(PERFIS).length ? "entrar" : "criar");
