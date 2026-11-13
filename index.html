@@ -70,6 +70,20 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .drv{display:flex;flex-direction:column;gap:8px}
 .drv label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .drv-bts{display:flex;gap:6px;flex-wrap:wrap}
+.rapido-box{display:flex;flex-direction:column;gap:6px;flex:1 1 100%;min-width:0}
+.rapido-box code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-family:var(--mono)}
+#rapido{flex:none!important;background:var(--bg);border:1px dashed var(--amber);color:var(--fg);border-radius:10px;padding:11px 12px;font:16px var(--mono)}
+.duvida{border-color:var(--violet)!important}
+.duvida h2{color:var(--violet)!important}
+.duv-txt{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:10px 12px;font:15px var(--body);width:100%;resize:vertical}
+.duv-res{display:flex;flex-direction:column;gap:10px}
+.duv-card{background:var(--row);border:1px solid var(--line);border-left:4px solid var(--c,var(--violet));border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.duv-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.duv-top b{font-size:17px;color:var(--c,var(--fg))}
+.duv-top span{font-size:12px;color:var(--muted)}
+.duv-card p{margin:0;font-size:14px;line-height:1.5}
+.duv-pun{font-size:13px;color:var(--muted)}
+.duv-melhor{font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
 .tempo-box{display:flex;flex-direction:column;gap:6px;flex:1 1 100%;min-width:0}
 .tempo-lab{font-size:12px;color:var(--muted)}
 .tempo-linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -529,6 +543,8 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
         <li>No quadro <b>Montar comando</b>, digite o <b>nick ou ID do jogador</b>.</li>
         <li>O comando sai no formato <code>/comando ID TEMPO MOTIVO | CÓDIGO</code>, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. O <b>tempo</b> vem da tabela (1ª vez); se for reincidência, troque no campo <b>Tempo</b>. No kick não tem tempo.</li>
         <li><b>Tempo:</b> escolha a unidade tocando em <b>min</b>, <b>dias</b> ou <b>permanente</b>, e use os atalhos <b>1ª · 2ª · 3ª</b> que vêm da tabela (ex.: VDM → 60 min · 1 a 5 dias). Prisão e mute vêm em min; banimento vem em dias. Em <b>dias</b> ou <b>permanente</b> o comando vira <b>ban</b> — só para ADM <b>nível 2</b> em diante (escolha o seu nível no cadastro ou ao lado do seu nome). No nível 1 aparece "peça a um superior".</li>
+        <li><b>⚡ Rápido:</b> digite a sigla e o ID juntos, ex.: <code>dm 123</code> ou <code>vdm Joao_Silva</code>. O comando já sai pronto para copiar.</li>
+        <li><b>❓ Tirar dúvida:</b> logo abaixo do Montar comando, conte o que o jogador fez (ex.: "saiu do jogo quando ia ser preso"). O app mostra as regras que cabem, com explicação, punição e um botão para usar no comando.</li>
         <li>Escreva <b>o que aconteceu</b> (ex.: <code>atropelou de propósito</code>, <code>cortou caminho pela grama</code>, <code>xingou a mãe</code>). O site escolhe a infração sozinho e mostra outras sugestões para tocar, se a primeira não for a certa.</li>
         <li>Ou escolha a <b>infração</b> direto na lista, manualmente.</li>
         <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
@@ -613,6 +629,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   <section class="montar" aria-labelledby="montarTit">
     <h2 id="montarTit">Montar comando</h2>
     <div class="campos">
+      <div class="rapido-box"><span class="tempo-lab">⚡ Rápido: sigla + ID (ex.: <code>dm 123</code> ou <code>vdm Joao_Silva</code>)</span><input id="rapido" type="text" placeholder="dm 123" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
       <input id="jogador" type="text" placeholder="Nick ou ID do jogador" aria-label="Nick ou ID do jogador" autocomplete="off">
       <input id="aconteceu" type="text" placeholder="O que aconteceu? (ex.: atropelou de propósito)" aria-label="O que aconteceu" autocomplete="off">
     </div>
@@ -640,6 +657,14 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
     </div>
   </section>
 
+  <section class="montar duvida" aria-labelledby="duvTit">
+    <h2 id="duvTit">❓ Tirar dúvida</h2>
+    <p class="dica-log">Conte o que o jogador fez, do seu jeito. O app mostra o que cabe aplicar, com a explicação da regra.</p>
+    <textarea id="duvTexto" rows="3" placeholder="ex.: um jogador saiu do jogo quando ia ser preso" class="duv-txt"></textarea>
+    <div class="resultado"><button type="button" id="duvBtn" class="btn-copiar">🔎 Ver o que aplicar</button><button type="button" id="duvLimpar" class="mini">Limpar</button></div>
+    <div id="duvRes" class="duv-res"></div>
+  </section>
+
 
 
   <div class="tools">
@@ -664,7 +689,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
 </div>
 
 <!-- Carrega sempre a versão mais nova do dados.js -->
-<script>document.write('<script src="dados.js?t=' + Date.now() + '"><\/script><script src="config.js?t=' + Date.now() + '"><\/script>');</script>
+<script>document.write('<script src="dados.js?t=' + Date.now() + '"><\/script><script src="config.js?t=' + Date.now() + '"><\/script><script src="explicacoes.js?t=' + Date.now() + '"><\/script>');</script>
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const curto = n => n.replace(/\s*\(.*?\)\s*/g, " ").trim();
@@ -817,6 +842,67 @@ document.getElementById("aconteceu").addEventListener("input", e => {
   selInf.value = String(ranking[0].i); ajustarTempo(); marcarSug(); montar();
 });
 sugBox.addEventListener("click", e => { const b = e.target.closest(".sug"); if (!b) return; selInf.value = b.dataset.i; ajustarTempo(); marcarSug(); montar(); });
+
+/* ⚡ Rápido: "dm 123" → escolhe a infração e coloca o ID */
+const EXPL = (typeof EXPLICACOES !== "undefined") ? EXPLICACOES : {};
+const OUTRAS = (typeof OUTRAS_REGRAS !== "undefined") ? OUTRAS_REGRAS : [];
+function acharSigla(token) {
+  const t = normA(token);
+  let idx = -1;
+  LISTA.forEach((r, i) => { if (idx >= 0) return; if (normA(curto(r.infracao)) === t || normA(r.codigo) === t) idx = i; });
+  return idx;
+}
+document.getElementById("rapido").addEventListener("input", e => {
+  const partes = e.target.value.trim().split(/\s+/).filter(Boolean);
+  if (partes.length < 1) return;
+  let iInf = -1, resto = [];
+  partes.forEach(p => { const i = iInf < 0 ? acharSigla(p) : -1; if (i >= 0) iInf = i; else resto.push(p); });
+  if (iInf < 0) return;
+  selInf.value = String(iInf); jogador.value = resto.join(" ");
+  ajustarTempo(); marcarSug(); montar();
+  setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0);
+});
+
+/* ❓ Tirar dúvida: mostra as regras que mais combinam, com explicação */
+function rankDuvida(texto) {
+  const q = toks(texto); if (!q.length) return [];
+  const vistos = new Set();
+  return LISTA.map((r, i) => {
+    const sig = curto(r.infracao), alvo = ALVOS[i];
+    const exp = EXPL[r.infracao] || EXPL[sig] || "";
+    const ex = new Set(toks(exp).map(raiz));
+    let pts = 0;
+    q.forEach(t => { if (t === alvo.sigla) pts += 4; else if (alvo.raizes.has(raiz(t))) pts += 2; else if (ex.has(raiz(t))) pts += 1; });
+    return { i, r, sig, exp, pts };
+  }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || a.i - b.i)
+    .filter(x => { const k = x.sig + "|" + SECAO_DE.get(x.r); if (vistos.has(k)) return false; vistos.add(k); return true; }).slice(0, 4);
+}
+function mostrarDuvida() {
+  const txt = document.getElementById("duvTexto").value, box = document.getElementById("duvRes");
+  const res = rankDuvida(txt);
+  const q = new Set(toks(txt).map(raiz));
+  const extras = OUTRAS.filter(o => toks(o.palavras + " " + o.titulo).some(w => q.has(raiz(w))));
+  if (!res.length && !extras.length) { box.innerHTML = '<p class="dica-log">Não achei uma regra que combine. Tente explicar de outro jeito (ex.: "atirou sem motivo", "saiu do jogo na ação") ou consulte a liderança.</p>'; return; }
+  const nomeSec = r => (SECOES.find(s => s.id === SECAO_DE.get(r)) || {}).titulo || "";
+  const extraHtml = extras.map(o => `<div class="duv-card" style="--c:var(--amber)"><div class="duv-top"><b>${esc(o.titulo)}</b><span>regra fora da tabela</span></div><p>${esc(o.texto)}</p></div>`).join("");
+  const extrasPrimeiro = extras.length && (!res.length || res[0].pts <= 2);
+  box.innerHTML = (extrasPrimeiro ? extraHtml : "") + res.map((x, n) => `<div class="duv-card" style="--c:${corDe(x.r.infracao)}">
+      ${n === 0 && !extrasPrimeiro ? '<span class="duv-melhor">Mais provável</span>' : ""}
+      <div class="duv-top"><b>${esc(x.r.infracao)} · ${esc(x.r.codigo)}</b><span>${esc(nomeSec(x.r))}</span></div>
+      <p>${esc(x.exp || signif(x.r) || "Sem explicação cadastrada.")}</p>
+      <div class="duv-pun">Punição na tabela: <b>${esc(x.r.punicao)}</b></div>
+      <div class="resultado"><button type="button" class="mini" data-usar="${x.i}">✅ Usar esta no Montar comando</button></div>
+    </div>`).join("") + (extrasPrimeiro ? "" : extraHtml)
+    + '<p class="dica-log">Isto é uma ajuda baseada nas regras escritas. Em caso de dúvida, consulte a liderança antes de aplicar.</p>';
+}
+document.getElementById("duvBtn").addEventListener("click", mostrarDuvida);
+document.getElementById("duvTexto").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mostrarDuvida(); } });
+document.getElementById("duvLimpar").addEventListener("click", () => { document.getElementById("duvTexto").value = ""; document.getElementById("duvRes").innerHTML = ""; });
+document.getElementById("duvRes").addEventListener("click", e => {
+  const b = e.target.closest("[data-usar]"); if (!b) return;
+  selInf.value = b.dataset.usar; ajustarTempo(); marcarSug(); montar(); setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0);
+  document.getElementById("montarTit").scrollIntoView({ behavior: "smooth", block: "start" }); jogador.focus();
+});
 /* ---------- Montar log / evidência (modelos dos canais de logs) ---------- */
 const MODELOS = {
   prisao:   { nome: "Registro de Prisão / Mute (cadeias-in-game)", tipo: "padrao", titulo: "REGISTRO DE PRISÃO / MUTE", canal: "1439558958179418142" },
@@ -879,7 +965,7 @@ document.getElementById("logCampos").addEventListener("change", () => { puxarDoC
 document.getElementById("lHoje").addEventListener("click", () => { document.getElementById("lData").value = hoje(); atualizarLog(); });
 /* Limpar campos: comando + evidência (e o relatório quando sai da conta) */
 function limparCampos(saindo) {
-  ["jogador", "aconteceu", "tempoCmd"].forEach(id => document.getElementById(id).value = "");
+  ["rapido", "jogador", "aconteceu", "tempoCmd"].forEach(id => document.getElementById(id).value = "");
   selInf.value = ""; infTempo = ""; ultimaInf = ""; ultimaUnid = ""; marcarUnid("min"); desenharAtalhos(null);
   const sb = document.getElementById("sugestoes"); sb.hidden = true; sb.innerHTML = "";
   montar();
