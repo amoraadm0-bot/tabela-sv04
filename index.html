@@ -710,7 +710,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   <section class="montar" aria-labelledby="montarTit">
     <h2 id="montarTit">Montar comando</h2>
     <div class="campos">
-      <div class="rapido-box"><span class="tempo-lab">⚡ Rápido: sigla + ID (ex.: <code>dm 123</code> ou <code>vdm Joao_Silva</code>)</span><input id="rapido" type="text" placeholder="dm 123" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="rapido-box"><span class="tempo-lab">⚡ Rápido: sigla + ID (ex.: <code>dm 123</code>, <code>vdm Joao_Silva</code>, <code>retirar mute id 34</code>, <code>soltar id 34</code>)</span><input id="rapido" type="text" placeholder="dm 123" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
       <input id="jogador" type="text" placeholder="Nick ou ID do jogador" aria-label="Nick ou ID do jogador" autocomplete="off">
       <input id="aconteceu" type="text" placeholder="O que aconteceu? (ex.: atropelou de propósito)" aria-label="O que aconteceu" autocomplete="off">
     </div>
@@ -934,6 +934,8 @@ function acharSigla(token) {
   return idx;
 }
 document.getElementById("rapido").addEventListener("input", e => {
+  const tp = lerTirar(e.target.value);
+  if (tp && tp.alvo) { selInf.value = ""; jogador.value = tp.alvo; pronto.textContent = tp.txt; pronto.className = ""; copiar.disabled = false; return; }
   const partes = e.target.value.trim().split(/\s+/).filter(Boolean);
   if (partes.length < 1) return;
   let iInf = -1, resto = [];
@@ -1204,13 +1206,13 @@ function comandoBP(resto) {
 }
 
 // 🔓 tirar punição: soltar da prisão / tirar mute
-function tirarPunicao(t) {
+function lerTirar(t) {
   const n = normA(t);
   let tipo = "";
   if (/\b(unmuterep|unmutep)\b|(mute|mutado|silenciad\w*)\s+(do|de|no)\s+(\/)?report|report\s+(mutado|silenciado)/.test(n) && /\b(tir|remov|desmut|unmute|libera|solt)/.test(n)) tipo = "rep";
   else if (/\b(unmute|desmut\w*|desmuta\w*)\b|\b(tira\w*|remov\w*|retir\w*|libera\w*|cancel\w*)\b.*\b(mute|mutad\w*|silenci\w*)/.test(n)) tipo = "mute";
   else if (/\b(unjail|solt(?:ar|a|e)|desprend\w*|liberta\w*)\b|\b(tira\w*|remov\w*|retir\w*|libera\w*)\b.*\b(prisao|preso|presa|cadeia|jail|cela)\b|\b(sair|tirar)\s+da\s+(prisao|cadeia|cela)/.test(n)) tipo = "jail";
-  if (!tipo) return false;
+  if (!tipo) return null;
   const limpo = t.replace(/\b(unmuterep|unmutep|unmute|unjail|jail|mute|report)\b/gi, " ");
   const mId = limpo.match(/(?:\bid\s*|#)(\d{1,6})\b/i) || limpo.match(/\b(\d{1,6})\b/);
   const mNick = limpo.match(/\b([A-Za-zÀ-ÿ]+_[A-Za-zÀ-ÿ0-9_]+)\b/);
@@ -1220,8 +1222,13 @@ function tirarPunicao(t) {
     mute: { cmd: "/unmute", nome: "Tirar o mute", cor: "var(--violet)" },
     rep:  { cmd: "/unmuterep", nome: "Tirar o mute do /report", cor: "var(--violet)" },
   }[tipo];
+  return { tipo, info, alvo, mId, txt: alvo ? `${info.cmd} ${alvo}` : "" };
+}
+function tirarPunicao(t) {
+  const x = lerTirar(t); if (!x) return false;
+  const { tipo, info, alvo, mId } = x;
   if (!alvo) { msgChat(`🔓 <b>${info.nome}</b>: me fala o ID ou o nick do jogador. Ex.: <i>${tipo === "jail" ? "soltar id 18" : tipo === "rep" ? "tirar mute do report id 18" : "tirar mute id 18"}</i>`); return true; }
-  const txt = `${info.cmd} ${alvo}`;
+  const txt = x.txt;
   msgChat(`<div class="chat-card" style="--c:${info.cor}">
     <div class="duv-top"><b>🔓 ${info.nome}</b><span>${mId ? "ID " : ""}${esc(alvo)}</span></div>
     <div class="chat-cmd"><code>${esc(txt)}</code><button type="button" class="btn-copiar" data-copiar="${esc(txt)}">Copiar</button></div>
