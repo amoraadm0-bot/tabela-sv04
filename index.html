@@ -484,6 +484,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <label data-campo="lMotivo">Motivo<input id="lMotivo" type="text" autocomplete="off"></label>
       <label data-campo="lRegra">Regra<input id="lRegra" type="text" placeholder="ex.: 4.3" autocomplete="off"></label>
       <label data-campo="lServ">Servidor<input id="lServ" type="text" autocomplete="off"></label>
+      <label data-campo="lSimb">Símbolo do servidor (opcional)<span class="lg-linha"><input id="lSimb" type="text" placeholder="ex.: 🐬" autocomplete="off" style="max-width:120px"><button type="button" class="mini" id="lSimbLimpar">sem símbolo</button></span></label>
       <label data-campo="lData">Data do ocorrido<span class="lg-linha"><input id="lData" type="text" autocomplete="off"><button type="button" id="lHoje" class="mini">Hoje</button></span></label>
       <label data-campo="lInformar">Informar<input id="lInformar" type="text" placeholder="ex.: @LÍDER S04" autocomplete="off"></label>
       <label data-campo="lRemocao" class="lg-full">Motivo da remoção<input id="lRemocao" type="text" autocomplete="off"></label>
@@ -1430,8 +1431,8 @@ document.getElementById("duvRes").addEventListener("click", e => {
 });
 /* ---------- Montar log / evidência (modelos dos canais de logs) ---------- */
 const MODELOS = {
-  prisao:   { nome: "Registro de Prisão / Mute (cadeias-in-game)", tipo: "padrao", titulo: "REGISTRO DE PRISÃO / MUTE", canal: "1439558958179418142" },
-  ban:      { nome: "Banimento in game (banimentos-in-game)", tipo: "padrao", titulo: "BANIMENTO IN GAME", dias: true, canal: "1439559036671496244" },
+  prisao:   { nome: "Registro de Prisão / Mute (cadeias-in-game)", tipo: "padrao", titulo: "REGISTRO DE PRISÃO / MUTE", emoji: true, canal: "1439558958179418142" },
+  ban:      { nome: "Banimento in game (banimentos-in-game)", tipo: "padrao", titulo: "BANIMENTO IN GAME", dias: true, emoji: true, canal: "1439559036671496244" },
   solban:   { nome: "Solicito banimento in game (solicitar-banimento)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IN GAME", dias: true, emoji: true, canal: "1439559077997842534" },
   solbanip: { nome: "Solicito banimento IP (solicitar-banimento-ip)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IP", dias: true, emoji: true, canal: "1439559116183044108" },
   solcad:   { nome: "Solicitação de prisão (solicitar-cadeia)", tipo: "solcad", canal: "1439559001216913448" },
@@ -1449,7 +1450,7 @@ const CANAIS = [
   ["1561906362663833690", "📒 possível-warn"],
 ];
 const CAMPOS_MOD = {
-  padrao:   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid"],
+  padrao:   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lSimb", "lData", "lEvid"],
   solcad:   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid"],
   staff:    ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lInformar", "lEvid"],
   tradeban: ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid"],
@@ -1459,15 +1460,15 @@ const v = id => document.getElementById(id).value.trim();
 const hoje = () => { const d = new Date(); return [d.getDate(), d.getMonth() + 1, d.getFullYear()].map(n => String(n).padStart(2, "0")).join("/"); };
 function textoLog() {
   const m = MODELOS[v("lModelo")], nomes = v("lNomes"), regra = v("lRegra"), motivo = v("lMotivo");
-  if (m.emoji) return `${m.titulo} 🐬\n\n🪪 NOME: ${nomes}\n\n⏰ TEMPO: ${v("lTempo")}\n\n🛂 MOTIVO: ${motivo}\n\n📑 REGRA: ${regra}\n\n✍️ obs: ${v("lObs")}\n\n📢 ${v("lServ")}\n🗓️ DATA DO OCORRIDO: ${v("lData")}\n\n📸 EVIDÊNCIAS: ${v("lEvid")}`;
+  if (m.emoji) return `# ${m.titulo}${v("lSimb") ? " " + v("lSimb") : ""}\n\n🪪 NOME: ${nomes}\n\n⏰ TEMPO: ${v("lTempo")}\n\n🛂 MOTIVO: ${motivo}\n\nObs: ${v("lObs")}\n\n📑 REGRA: ${regra}\n\n📢 ${v("lServ")}\n\n🗓️ DATA DO OCORRIDO:\n${v("lData")}\n\n📸 EVIDÊNCIAS: ${v("lEvid")}`;
   if (m.tipo === "padrao") return `${m.titulo}\n\nNOME: ${nomes}\n\nTEMPO: ${v("lTempo")}\n\nMOTIVO: ${motivo}\n\nOBS: ${v("lObs")}\n\nREGRA: ${regra}\n\n${v("lServ")}\n\nDATA DO OCORRIDO: ${v("lData")}\n\nEVIDÊNCIAS: ${v("lEvid")}`;
   if (m.tipo === "solcad") return `SOLICITAÇÃO DE PRISÃO\n\nNOME: ${nomes}\n\nTEMPO: ${v("lTempo")}\n\nMOTIVO: ${motivo} ${regra}\n\nSERVIDOR: ${v("lServ")}\n\nDATA: ${v("lData")}\n\nOBSERVAÇÃO: ${v("lObs")}\n\nEVIDÊNCIA: ${v("lEvid")}`;
   if (m.tipo === "staff") return `• SOLICITO: PRISÃO / BANIMENTO\n\n• NOME: ${nomes}\n\n• TEMPO: ${v("lTempo")}\n\n• MOTIVO: ${motivo} | ${regra}\n\n• SERVIDOR: ${v("lServ")}\n\n• INFORMAR: ${v("lInformar")}\n\n• OBSERVAÇÃO: ${v("lObs")}\n\n• EVIDÊNCIAS: ${v("lEvid")}`;
   if (m.tipo === "tradeban") return `TRADEBAN APLICADO\n\n• | NOME: ${nomes}\n\n• | TEMPO: ${v("lTempo")}\n\n• | MOTIVO + ARTIGO: ${motivo} ${regra}\n\n• | SERVIDOR: ${v("lServ")}\n\n• | DATA DO OCORRIDO: ${v("lData")}\n\nOBS: ${v("lObs")}\n\n• | EVIDÊNCIA FIXADA: ${v("lEvid")}`;
   return `⚠ | PUNIÇÃO REMOVIDA / ALTERADA\n\n• Aplicada por: ${v("lAplicador")}\n\n• Nickname: ${nomes}\n\n• Punição: ${v("lPunicao")}\n\n• Motivo: ${motivo}\n\n• Motivo da remoção: ${v("lRemocao")}\n\n• informar: ${v("lInformar")}`;
 }
-const LOG_IDS = ["lModelo", "lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid", "lInformar", "lAplicador", "lPunicao", "lRemocao"];
-const LEMBRAR = ["lModelo", "lServ", "lInformar", "lAplicador"];   // ficam salvos para a próxima vez
+const LOG_IDS = ["lSimb", "lModelo", "lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid", "lInformar", "lAplicador", "lPunicao", "lRemocao"];
+const LEMBRAR = ["lModelo", "lServ", "lSimb", "lInformar", "lAplicador"];   // ficam salvos para a próxima vez
 function guardarLog() { try { const o = {}; LOG_IDS.forEach(id => o[id] = document.getElementById(id).value); o.jogador = jogador.value; o.nick = nickJog.value; localStorage.setItem("adm_log", JSON.stringify(o)); } catch (_) {} }
 function atualizarLog() {
   const m = MODELOS[v("lModelo")], mostrar = new Set(CAMPOS_MOD[m.tipo]);
@@ -1488,6 +1489,7 @@ btnDc.addEventListener("click", () => {
 document.getElementById("lModelo").innerHTML = Object.entries(MODELOS).map(([k, m]) => `<option value="${k}">${m.nome}</option>`).join("");
 document.getElementById("logCampos").addEventListener("input", atualizarLog);
 document.getElementById("logCampos").addEventListener("change", () => { puxarDoComando(); atualizarLog(); });
+document.getElementById("lSimbLimpar").addEventListener("click", () => { document.getElementById("lSimb").value = ""; atualizarLog(); });
 document.getElementById("lHoje").addEventListener("click", () => { document.getElementById("lData").value = hoje(); atualizarLog(); });
 /* Limpar campos: comando + evidência (e o relatório quando sai da conta) */
 function limparCampos(saindo) {
@@ -1554,6 +1556,7 @@ sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atua
   LOG_IDS.forEach(id => { if (o[id] != null && o[id] !== "") document.getElementById(id).value = o[id]; });
   if (!o.lModelo) document.getElementById("lModelo").value = "prisao";
   if (!document.getElementById("lServ").value) document.getElementById("lServ").value = "@SERVIDOR 04";
+  if (o.lSimb == null && /\b0?4\b/.test(document.getElementById("lServ").value)) document.getElementById("lSimb").value = "🐬";
   if (!document.getElementById("lData").value) document.getElementById("lData").value = hoje();
   if (o.jogador) { jogador.value = o.jogador; montar(); }
   if (o.nick) nickJog.value = o.nick;
