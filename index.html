@@ -70,6 +70,21 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .drv{display:flex;flex-direction:column;gap:8px}
 .drv label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .drv-bts{display:flex;gap:6px;flex-wrap:wrap}
+.tempo-box{display:flex;flex-direction:column;gap:6px;flex:1 1 100%;min-width:0}
+.tempo-lab{font-size:12px;color:var(--muted)}
+.tempo-linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#tempoCmd{flex:0 0 90px!important;width:90px;text-align:center;font-size:18px!important;font-weight:700}
+#tempoCmd:disabled{opacity:.4}
+.unidades{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.uni{font:600 14px var(--body);color:var(--muted);background:var(--bg);border:0;padding:10px 14px;cursor:pointer}
+.uni + .uni{border-left:1px solid var(--line)}
+.uni[aria-checked="true"]{background:var(--teal);color:#06231d}
+.uni[data-u="dias"][aria-checked="true"]{background:var(--coral);color:#2a0a0a}
+.uni[data-u="perm"][aria-checked="true"]{background:#b02a37;color:#fff}
+.atalhos{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.at{font:600 13px var(--body);color:var(--fg);background:var(--row);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.at[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-soft)}
+.aviso-nivel{font-size:12px;color:var(--warn)}
 .drv-tit{font-size:12px;color:var(--muted)}
 .btn-anexar{font:600 15px var(--body);color:var(--fg);background:var(--row);border:1px dashed var(--amber);border-radius:12px;padding:14px;cursor:pointer;text-align:center}
 .btn-anexar:hover{background:var(--amber-soft)}
@@ -320,7 +335,8 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   .montar h2{font-size:19px}
   .campos{gap:8px}
   .campos > *{flex:1 1 100%!important}
-  #tempoCmd{flex:1 1 100%!important}
+  .tempo-linha{flex-wrap:nowrap}
+  .uni{padding:10px 10px}
   .resultado > *{flex:1 1 auto;text-align:center;justify-content:center}
   #cmdPronto{font-size:16px}
   .log-grid{grid-template-columns:1fr 1fr;gap:8px}
@@ -352,6 +368,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
     </div>
     <label>Nome de ADM<input id="gNome" type="text" autocomplete="username" placeholder="ex.: ADM Amora"></label>
     <label id="gEmailBox" hidden>E-mail<input id="gEmail" type="email" autocomplete="email" placeholder="seu e-mail"></label>
+    <label id="gNivelBox" hidden>Seu nível de ADM<select id="gNivel"><option value="1">Nível 1</option><option value="2">Nível 2</option><option value="3">Nível 3</option><option value="4">Nível 4</option><option value="5">Nível 5</option></select></label>
     <label id="gServBox" hidden>De qual servidor você é?<select id="gServ"><option value="">Escolha o servidor...</option><option value="01">Servidor 01</option><option value="02">Servidor 02</option><option value="03">Servidor 03</option><option value="04">Servidor 04</option><option value="05">Servidor 05</option><option value="06">Servidor 06</option><option value="07">Servidor 07</option><option value="08">Servidor 08</option><option value="09">Servidor 09</option><option value="10">Servidor 10</option></select></label>
     <label id="gCodBox" hidden>Código de recuperação<input id="gCod" type="text" autocomplete="off" placeholder="XXXX-XXXX" style="text-transform:uppercase;font-family:var(--mono)"></label>
     <label>Senha<input id="gSenha" type="password" autocomplete="current-password"></label>
@@ -509,6 +526,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <ol>
         <li>No quadro <b>Montar comando</b>, digite o <b>nick ou ID do jogador</b>.</li>
         <li>O comando sai no formato <code>/comando ID TEMPO MOTIVO | CÓDIGO</code>, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. O <b>tempo</b> vem da tabela (1ª vez); se for reincidência, troque no campo <b>Tempo</b>. No kick não tem tempo.</li>
+        <li><b>Tempo:</b> escolha a unidade tocando em <b>min</b>, <b>dias</b> ou <b>permanente</b>, e use os atalhos <b>1ª · 2ª · 3ª</b> que vêm da tabela (ex.: VDM → 60 min · 1 a 5 dias). Prisão e mute vêm em min; banimento vem em dias. Em <b>dias</b> ou <b>permanente</b> o comando vira <b>ban</b> — só para ADM <b>nível 2</b> em diante (escolha o seu nível no cadastro ou ao lado do seu nome). No nível 1 aparece "peça a um superior".</li>
         <li>Escreva <b>o que aconteceu</b> (ex.: <code>atropelou de propósito</code>, <code>cortou caminho pela grama</code>, <code>xingou a mãe</code>). O site escolhe a infração sozinho e mostra outras sugestões para tocar, se a primeira não for a certa.</li>
         <li>Ou escolha a <b>infração</b> direto na lista, manualmente.</li>
         <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
@@ -599,7 +617,18 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
     <div id="sugestoes" class="sugestoes" hidden></div>
     <div class="campos">
       <select id="infracaoSel" aria-label="Infração (escolher manualmente)"></select>
-      <input id="tempoCmd" type="text" inputmode="numeric" placeholder="Tempo (min ou dias)" aria-label="Tempo da punição" autocomplete="off" style="flex:0 1 150px">
+      <div class="tempo-box">
+        <span class="tempo-lab">Tempo</span>
+        <div class="tempo-linha">
+          <input id="tempoCmd" type="text" inputmode="numeric" placeholder="0" aria-label="Tempo da punição" autocomplete="off">
+          <div class="unidades" role="radiogroup" aria-label="Unidade do tempo">
+            <button type="button" class="uni" data-u="min" role="radio" aria-checked="true">min</button>
+            <button type="button" class="uni" data-u="dias" role="radio" aria-checked="false">dias</button>
+            <button type="button" class="uni" data-u="perm" role="radio" aria-checked="false">permanente</button>
+          </div>
+        </div>
+        <div id="atalhosTempo" class="atalhos" hidden></div>
+      </div>
     </div>
     <div class="resultado">
       <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
@@ -642,6 +671,41 @@ const signif = r => SIG[r.infracao] || SIG[curto(r.infracao)] || "";
 /* Formato do comando: /comando [ID] TEMPO MOTIVO | CÓDIGO  (sem tempo quando é kick) */
 const tempoPadrao = r => { const m = String(r.punicao || "").match(/(\d+)\s*(?:a\s*\d+\s*)?(min|dia)/i); return m ? m[1] : ""; };
 const completo = (r, tempo) => { if (!r.comando) return ""; const t = tempo ?? tempoPadrao(r); return `${r.comando}${t ? " " + t : ""} ${curto(r.infracao)} | ${r.codigo}`; };
+/* Tempo com unidade: lê as opções da própria tabela (1ª vez, 2ª vez...) */
+function opcoesTempo(r) {
+  if (!r) return [];
+  return String(r.punicao || "").split("/").map(s => s.trim()).filter(Boolean).map(seg => {
+    if (/perman/i.test(seg)) return { rot: "Permanente", n: "", u: "perm" };
+    const m = seg.match(/(\d+)\s*(?:a\s*(\d+)\s*)?(min|dia)/i);
+    if (!m) return null;
+    const u = /dia/i.test(m[3]) ? "dias" : "min";
+    return { rot: m[2] ? `${m[1]} a ${m[2]} ${u}` : `${m[1]} ${u}`, n: m[1], u };
+  }).filter(Boolean);
+}
+let UNID = "min";
+const nivelAtual = () => (typeof ATUAL !== "undefined" && ATUAL && PERFIS[ATUAL] && +PERFIS[ATUAL].nivel) || 1;
+function marcarUnid(u) { UNID = u; document.querySelectorAll(".uni").forEach(b => b.setAttribute("aria-checked", b.dataset.u === u)); const t = document.getElementById("tempoCmd"); t.disabled = u === "perm"; if (u === "perm") t.value = ""; }
+function desenharAtalhos(r) {
+  const box = document.getElementById("atalhosTempo"), ops = opcoesTempo(r);
+  box.hidden = ops.length < 1;
+  box.innerHTML = ops.length ? "Da tabela: " + ops.map((o, i) => `<button type="button" class="at" data-i="${i}">${["1ª", "2ª", "3ª", "4ª"][i] || (i + 1) + "ª"} · ${esc(o.rot)}</button>`).join("") : "";
+  box._ops = ops;
+}
+/* Monta o comando conforme a unidade: min = comando da tabela; dias/permanente = ban (nível 2+) */
+function comandoMontado(r) {
+  const n = jogador.value.trim(), tempo = document.getElementById("tempoCmd").value.trim();
+  const ban = UNID !== "min" || SECAO_DE.get(r) === "bans";
+  let base = r.comando;
+  if (ban) {
+    if (nivelAtual() < 2) return { erro: "Ban (dias/permanente) é do ADM nível 2 em diante. Peça a um superior e use a aba \"🧾 Montar evidência\" para solicitar." };
+    base = (typeof CMD_BAN !== "undefined" && CMD_BAN) || "";
+    if (!base) return { erro: "O comando de ban ainda não foi configurado." };
+  }
+  if (!base) return { erro: "Admin Level 1 não tem comando para isso. Peça a um superior e use a aba \"🧾 Montar evidência\" para solicitar." };
+  const t = UNID === "perm" ? ((typeof BAN_PERMANENTE !== "undefined" && BAN_PERMANENTE) || "") : tempo;
+  const txt = `${base}${t ? " " + t : ""} ${curto(r.infracao)} | ${r.codigo}`;
+  return { txt: n ? txt.replace(/\[(nick|ID)\]|\{ID\}/g, n) : txt };
+}
 const comAlvo = t => t;
 /* Uma cor para cada infração (a mesma sigla tem sempre a mesma cor) */
 const corDe = n => { const s = String(n).replace(/\s*\(.*?\)\s*/g, " ").trim().toLowerCase(); let x = 0; for (const ch of s) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return `hsl(${(x * 137.508) % 360} 75% 64%)`; };
@@ -696,15 +760,27 @@ const jogador = document.getElementById("jogador"), pronto = document.getElement
 function montar() {
   const r = LISTA[selInf.value], n = jogador.value.trim();
   if (!r) { pronto.textContent = "Digite o nick e escolha a infração"; pronto.className = "vazio"; copiar.disabled = true; return; }
-  if (!r.comando) { pronto.textContent = "Admin Level 1 não tem comando para isso. Peça a um superior e use a aba \"🧾 Montar evidência\" para solicitar."; pronto.className = "vazio"; copiar.disabled = true; return; }
-  const t = completo(r, document.getElementById("tempoCmd").value.trim());
-  pronto.textContent = n ? t.replace(/\[(nick|ID)\]|\{ID\}/g, n) : t;
-  pronto.className = ""; copiar.disabled = false;
+  const c = comandoMontado(r);
+  if (c.erro) { pronto.textContent = c.erro; pronto.className = "vazio"; copiar.disabled = true; return; }
+  pronto.textContent = c.txt; pronto.className = ""; copiar.disabled = false;
 }
 jogador.addEventListener("input", montar);
 let infTempo = "";
-function ajustarTempo() { if (selInf.value !== infTempo) { infTempo = selInf.value; const r = LISTA[selInf.value]; document.getElementById("tempoCmd").value = r ? tempoPadrao(r) : ""; } }
-document.getElementById("tempoCmd").addEventListener("input", montar);
+function ajustarTempo() {
+  if (selInf.value === infTempo) return;
+  infTempo = selInf.value; const r = LISTA[selInf.value];
+  desenharAtalhos(r);
+  const ops = opcoesTempo(r), o = ops[0];
+  if (o) { marcarUnid(o.u); document.getElementById("tempoCmd").value = o.n; marcarAtalho(0); }
+  else { marcarUnid(r && SECAO_DE.get(r) === "bans" ? "dias" : "min"); document.getElementById("tempoCmd").value = ""; }
+}
+function marcarAtalho(i) { document.querySelectorAll("#atalhosTempo .at").forEach(b => b.setAttribute("aria-pressed", +b.dataset.i === i)); }
+document.getElementById("atalhosTempo").addEventListener("click", e => {
+  const b = e.target.closest(".at"); if (!b) return; const o = document.getElementById("atalhosTempo")._ops[+b.dataset.i];
+  marcarUnid(o.u); document.getElementById("tempoCmd").value = o.n; marcarAtalho(+b.dataset.i); montar(); puxarDoComando(true); atualizarLog();
+});
+document.querySelectorAll(".uni").forEach(b => b.addEventListener("click", () => { marcarUnid(b.dataset.u); marcarAtalho(-1); montar(); puxarDoComando(true); atualizarLog(); }));
+document.getElementById("tempoCmd").addEventListener("input", () => { marcarAtalho(-1); montar(); puxarDoComando(true); atualizarLog(); });
 document.getElementById("irEvidencia").addEventListener("click", () => { puxarDoComando(); atualizarLog(); mostrar("evidencia"); history.replaceState(history.state, "", "#evidencia"); window.scrollTo(0, 0); });
 selInf.addEventListener("change", () => { ajustarTempo(); marcarSug(); montar(); });
 
@@ -802,7 +878,7 @@ document.getElementById("lHoje").addEventListener("click", () => { document.getE
 /* Limpar campos: comando + evidência (e o relatório quando sai da conta) */
 function limparCampos(saindo) {
   ["jogador", "aconteceu", "tempoCmd"].forEach(id => document.getElementById(id).value = "");
-  selInf.value = ""; infTempo = ""; ultimaInf = "";
+  selInf.value = ""; infTempo = ""; ultimaInf = ""; ultimaUnid = ""; marcarUnid("min"); desenharAtalhos(null);
   const sb = document.getElementById("sugestoes"); sb.hidden = true; sb.innerHTML = "";
   montar();
   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lEvid", "lPunicao", "lRemocao"].forEach(id => document.getElementById(id).value = "");
@@ -834,11 +910,14 @@ document.getElementById("copiarLog").addEventListener("click", () => {
 });
 // Puxa nick, motivo, regra e tempo do quadro "Montar comando"
 let ultimaInf = "";
-function puxarDoComando() {
+let ultimaUnid = "";
+function puxarDoComando(forcar) {
   const r0 = LISTA[selInf.value];
-  if (r0 && selInf.value !== ultimaInf) {   // escolhe o modelo e o canal sozinho pelo tipo de punição
-    ultimaInf = selInf.value;
-    const novo = SECAO_DE.get(r0) === "bans" ? (/\bIP\b/.test(r0.punicao) && /3\.14|3\.11/.test(r0.codigo) ? "solbanip" : "solban") : "prisao";
+  if (r0 && (selInf.value !== ultimaInf || UNID !== ultimaUnid)) {   // escolhe o modelo e o canal sozinho pelo tipo de punição
+    ultimaInf = selInf.value; ultimaUnid = UNID;
+    const ehBan = UNID !== "min" || SECAO_DE.get(r0) === "bans";
+    const ip = /\bIP\b/.test(r0.punicao) && /3\.14|3\.11/.test(r0.codigo);
+    const novo = ehBan ? (nivelAtual() >= 2 ? "ban" : (ip ? "solbanip" : "solban")) : "prisao";
     const atual = v("lModelo");
     if (atual !== "removida") { document.getElementById("lModelo").value = novo; selCanal.value = MODELOS[novo].canal; linkCanal(); }
   }
@@ -851,7 +930,7 @@ function puxarDoComando() {
   const partes = r.punicao.split("/").map(s => s.trim());
   const t = (m.dias && partes.find(p => /dia|ban|perman/i.test(p))) || partes[0] || "";
   const tc = document.getElementById("tempoCmd").value.trim();
-  document.getElementById("lTempo").value = tc ? (/dia/i.test(t) && m.dias ? tc + " Dias" : tc) : t.replace(/^ban\s*/i, "");
+  document.getElementById("lTempo").value = UNID === "perm" ? "Permanente" : tc ? (UNID === "dias" ? tc + " Dias" : tc) : t.replace(/^ban\s*/i, "");
 }
 ["input", "change"].forEach(ev => [jogador, selInf, document.getElementById("aconteceu")].forEach(el => el.addEventListener(ev, () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0))));
 sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0));
@@ -881,9 +960,9 @@ function desenharPerfil() {
     const nome = PERFIS[ATUAL].nome;
     const sv = PERFIS[ATUAL].serv || "";
     const optsSv = Array.from({ length: 10 }, (_, i) => String(i + 1).padStart(2, "0")).map(n => `<option value="${n}"${n === sv ? " selected" : ""}>Servidor ${n}</option>`).join("");
-    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b> · <select id="pServ" class="p-serv" aria-label="Seu servidor"><option value="">Servidor?</option>${optsSv}</select></span><span class="lg-linha"><button type="button" class="mini" id="pCod">${PERFIS[ATUAL].rec ? "Novo código de recuperação" : "⚠ Criar código de recuperação"}</button><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></span></div>`;
+    elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b> · <select id="pServ" class="p-serv" aria-label="Seu servidor"><option value="">Servidor?</option>${optsSv}</select> · <select id="pNivel" class="p-serv" aria-label="Seu nível">${[1,2,3,4,5].map(n => `<option value="${n}"${n === nivelAtual() ? " selected" : ""}>Nível ${n}</option>`).join("")}</select></span><span class="lg-linha"><button type="button" class="mini" id="pCod">${PERFIS[ATUAL].rec ? "Novo código de recuperação" : "⚠ Criar código de recuperação"}</button><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></span></div>`;
     if (sv) { document.getElementById("lServ").value = "@SERVIDOR " + sv; atualizarLog(); }
-    document.getElementById("quemTopo").innerHTML = `👤 ${esc(nome)}${sv ? " · S" + sv : ""} · <button type="button" class="link-sair" id="pSair2">Sair</button>`;
+    document.getElementById("quemTopo").innerHTML = `👤 ${esc(nome)}${sv ? " · S" + sv : ""} · N${nivelAtual()} · <button type="button" class="link-sair" id="pSair2">Sair</button>`;
     elSalvos.hidden = false; desenharSalvos(); if (typeof desenharRelSalvos === "function") desenharRelSalvos();
     const ap = document.getElementById("lAplicador"); if (!ap.value) { ap.value = nome; atualizarLog(); }
     return;
@@ -915,6 +994,7 @@ function modoGate(m) {
   document.getElementById("gSenha2Box").hidden = m === "entrar";
   document.getElementById("gCodBox").hidden = m !== "recuperar";
   document.getElementById("gServBox").hidden = m !== "criar";
+  document.getElementById("gNivelBox").hidden = m !== "criar";
   document.getElementById("gEmailBox").hidden = m !== "criar";
   document.getElementById("gEsqueci").hidden = m !== "entrar";
   document.getElementById("gEntrar").textContent = m === "criar" ? "Criar conta" : m === "recuperar" ? "Criar senha nova" : "Entrar";
@@ -925,7 +1005,10 @@ function modoGate(m) {
 }
 document.querySelectorAll("#gate .g-aba").forEach(b => b.addEventListener("click", () => modoGate(b.dataset.m)));
 document.getElementById("gEsqueci").addEventListener("click", () => modoGate("recuperar"));
-document.addEventListener("change", e => { if (e.target.id === "pServ" && ATUAL) { PERFIS[ATUAL].serv = e.target.value; gravarJ("adm_perfis", PERFIS); desenharPerfil(); } });
+document.addEventListener("change", e => {
+  if (e.target.id === "pServ" && ATUAL) { PERFIS[ATUAL].serv = e.target.value; gravarJ("adm_perfis", PERFIS); desenharPerfil(); }
+  if (e.target.id === "pNivel" && ATUAL) { PERFIS[ATUAL].nivel = e.target.value; gravarJ("adm_perfis", PERFIS); desenharPerfil(); ultimaUnid = ""; montar(); puxarDoComando(true); atualizarLog(); }
+});
 async function gateEnviar() {
   const g = document.getElementById("gate"), msg = document.getElementById("gMsg"), modo = g.dataset.modo;
   const nome = document.getElementById("gNome").value.trim(), s1 = document.getElementById("gSenha").value, s2 = document.getElementById("gSenha2").value;
@@ -942,7 +1025,7 @@ async function gateEnviar() {
     const serv = document.getElementById("gServ").value;
     if (!serv) return erro("Escolha de qual servidor você é.");
     const cod = gerarCodigo();
-    PERFIS[k] = { nome, email, serv, pin: await hashPin(s1), rec: await hashCod(cod), logs: p ? p.logs : [] };
+    PERFIS[k] = { nome, email, serv, nivel: document.getElementById("gNivel").value, pin: await hashPin(s1), rec: await hashCod(cod), logs: p ? p.logs : [] };
     if (!gravarJ("adm_perfis", PERFIS)) return erro("Este navegador não deixa salvar. Abra pelo app instalado ou pelo Chrome normal (fora da aba anônima).");
     return mostrarCodigo(cod, entrar);
   }
