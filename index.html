@@ -2120,12 +2120,11 @@ window.addEventListener("appinstalled", () => { document.getElementById("instala
   function virarBolha(on) {
     if (on) { scroll = window.scrollY; document.body.classList.add("bolha"); bolha.hidden = false; }
     else { document.body.classList.remove("bolha"); bolha.hidden = true; window.scrollTo(0, scroll); }
-    try { localStorage.setItem("adm_bolha", on ? "1" : ""); } catch (_) {}
   }
   document.addEventListener("touchstart", e => { if (e.touches.length === 2) d0 = dist(e.touches); }, { passive: true });
   document.addEventListener("touchmove", e => {
     if (e.touches.length === 2 && d0 && !document.body.classList.contains("bolha")) {
-      const dd = dist(e.touches); if (dd < d0 * 0.8 || d0 - dd > 40) { d0 = 0; e.preventDefault(); virarBolha(true); }
+      const dd = dist(e.touches); if (dd < d0 * 0.7 || d0 - dd > 60) { d0 = 0; e.preventDefault(); virarBolha(true); }
     }
   }, { passive: false });
   document.addEventListener("touchend", e => { if (e.touches.length < 2) d0 = 0; }, { passive: true });
@@ -2139,7 +2138,7 @@ window.addEventListener("appinstalled", () => { document.getElementById("instala
     bolha.style.left = Math.max(0, Math.min(innerWidth - 64, x)) + "px"; bolha.style.top = Math.max(0, Math.min(innerHeight - 64, y)) + "px";
   });
   bolha.addEventListener("pointerup", () => { if (!moveu) virarBolha(false); });
-  try { if (localStorage.getItem("adm_bolha") === "1") virarBolha(true); } catch (_) {}
+  try { localStorage.removeItem("adm_bolha"); } catch (_) {}   // sempre abre normal
   document.getElementById("btnMin").addEventListener("click", () => virarBolha(true));
   window.virarBolha = virarBolha;
 })();
