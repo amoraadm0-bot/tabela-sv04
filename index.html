@@ -229,6 +229,10 @@ body.travado{overflow:hidden}
 .man-body p{margin:6px 0}
 .man-body code{font-family:var(--mono);background:var(--accent-soft);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
 .man-body .warn{color:var(--warn)}
+body.bolha>*:not(#bolha){visibility:hidden}
+body.bolha{background:transparent!important;overflow:hidden}
+#bolha{position:fixed;z-index:9999;left:calc(100vw - 84px);top:40vh;width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(124,77,255,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font:700 15px var(--body);box-shadow:0 4px 18px rgba(0,0,0,.35);touch-action:none;cursor:pointer;opacity:.75}
+#bolha:active{opacity:1}
 </style>
 <style>
 #instalar{font:600 14px var(--body);color:var(--fg);background:var(--accent);border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
@@ -401,6 +405,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   </div>
 </div>
 <div id="toast" class="toast" hidden></div>
+<button type="button" id="bolha" hidden aria-label="Abrir o app de novo">ADM</button>
 <button type="button" id="btnCompacto" class="btn-compacto" aria-pressed="false" title="Modo janela flutuante">🪟</button>
 <div id="gate" hidden>
   <div class="g-card">
@@ -681,6 +686,9 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
 
       <h3>Modo janela (🪟)</h3>
       <p>Toque no botão redondo <b>🪟</b> no canto de baixo para deixar só o essencial na tela (Montar comando e evidência, sem título e com letras menores). Ideal para usar na <b>janela flutuante</b> por cima do jogo. Toque de novo para voltar ao normal. O app lembra a sua escolha.</p>
+
+      <h3>Virar bolha (🫧 pinça)</h3>
+      <p>Faça o movimento de <b>pinça</b> na tela (dois dedos se fechando): o app vira uma <b>bolha transparente</b> escrito ADM. Arraste a bolha para onde quiser e <b>toque nela</b> para o app voltar do jeito que estava.</p>
 
       <h3>Deixar o app numa barrinha dentro do jogo</h3>
       <p>Primeiro instale o app (<b>📲 Baixar app Rio Rise</b>). Depois siga o passo do seu celular:</p>
@@ -2100,6 +2108,36 @@ btnInst.addEventListener("click", () => instalarApp(btnInst, como));
 document.getElementById("instalarGate").addEventListener("click", e => instalarApp(e.currentTarget, document.getElementById("comoInstalarGate")));
 if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) document.getElementById("instalarGate").hidden = true;
 window.addEventListener("appinstalled", () => { document.getElementById("instalar").hidden = true; });
+
+/* 🫧 Pinça com 2 dedos (fechar os dedos) → o app vira uma bolha transparente; toque na bolha para voltar. Arraste para mudar de lugar. */
+(function () {
+  const bolha = document.getElementById("bolha"); let d0 = 0, scroll = 0;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  function virarBolha(on) {
+    if (on) { scroll = window.scrollY; document.body.classList.add("bolha"); bolha.hidden = false; }
+    else { document.body.classList.remove("bolha"); bolha.hidden = true; window.scrollTo(0, scroll); }
+    try { localStorage.setItem("adm_bolha", on ? "1" : ""); } catch (_) {}
+  }
+  document.addEventListener("touchstart", e => { if (e.touches.length === 2) d0 = dist(e.touches); }, { passive: true });
+  document.addEventListener("touchmove", e => {
+    if (e.touches.length === 2 && d0 && !document.body.classList.contains("bolha")) {
+      if (dist(e.touches) < d0 * 0.55) { d0 = 0; e.preventDefault(); virarBolha(true); }
+    }
+  }, { passive: false });
+  document.addEventListener("touchend", e => { if (e.touches.length < 2) d0 = 0; }, { passive: true });
+  // arrastar a bolha; toque sem arrastar abre o app
+  let ox = 0, oy = 0, moveu = false;
+  bolha.addEventListener("pointerdown", e => { moveu = false; ox = e.clientX - bolha.offsetLeft; oy = e.clientY - bolha.offsetTop; bolha.setPointerCapture(e.pointerId); });
+  bolha.addEventListener("pointermove", e => {
+    if (!bolha.hasPointerCapture(e.pointerId)) return;
+    const x = e.clientX - ox, y = e.clientY - oy;
+    if (Math.abs(x - bolha.offsetLeft) + Math.abs(y - bolha.offsetTop) > 3) moveu = true;
+    bolha.style.left = Math.max(0, Math.min(innerWidth - 64, x)) + "px"; bolha.style.top = Math.max(0, Math.min(innerHeight - 64, y)) + "px";
+  });
+  bolha.addEventListener("pointerup", () => { if (!moveu) virarBolha(false); });
+  try { if (localStorage.getItem("adm_bolha") === "1") virarBolha(true); } catch (_) {}
+  window.virarBolha = virarBolha;
+})();
 </script>
 </body>
 </html>
