@@ -66,6 +66,19 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
 .engrenagem{display:inline-flex;align-items:center;gap:6px;color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600}
 .engrenagem:hover{border-color:var(--accent)}
 .engrenagem:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dica-log{margin:0;font-size:13px;color:var(--muted)}
+.log-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.log-grid label,.lg-lab{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.log-grid .lg-full{grid-column:1/-1}
+.log-grid input,.log-grid select,.log-grid textarea,#logPronto{background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:9px 11px;font:14px var(--body);width:100%;min-width:0}
+#logPronto{font-family:var(--mono);font-size:13px;line-height:1.4;resize:vertical}
+.log-grid input:focus,.log-grid select:focus,.log-grid textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+#logCampos input,#logCampos select,#logCampos textarea,#logPronto{flex:none}
+.lg-linha{display:flex;gap:6px}
+#logCampos .lg-linha input{flex:1 1 auto}
+.mini{font:600 13px var(--body);color:var(--fg);background:var(--row);border:1px solid var(--line);border-radius:9px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.mini:hover{border-color:var(--accent)}
+.btn-copiar{font:600 15px var(--body);color:var(--fg);background:var(--accent);border:0;border-radius:10px;padding:11px 20px;cursor:pointer}
 .montar{background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .montar h2{font-family:var(--display);font-size:20px;margin:0;letter-spacing:.04em}
 .montar .campos{display:flex;gap:10px;flex-wrap:wrap}
@@ -152,6 +165,15 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
         <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
       </ol>
 
+      <h3>Montar o log / evidência</h3>
+      <ol>
+        <li>Depois de montar o comando, desça até <b>Montar log / evidência</b>. O nick, o motivo, a regra e o tempo já vêm preenchidos.</li>
+        <li>Escolha o <b>modelo</b> do canal onde vai postar (ex.: Registro de Prisão / Mute, Solicito banimento IP, Punição removida).</li>
+        <li>Cole o <b>link do Drive</b> em Evidências, preencha a observação se tiver e toque em <b>Copiar log</b>. Depois é só colar no canal de logs do Discord.</li>
+        <li>Mais de um jogador? Coloque um nick por linha. Para o próximo log, toque em <b>Limpar para o próximo</b>.</li>
+        <li>Servidor, "Informar" e "Aplicada por" ficam salvos no seu celular. Se o app fechar sem querer, o que você preencheu volta quando abrir de novo.</li>
+      </ol>
+
       <h3>Ou copiar direto da tabela</h3>
       <ol>
         <li>Toque no <b>comando azul</b> da linha. Ele é copiado já com a infração e o código do artigo, e aparece "Copiado!".</li>
@@ -213,6 +235,28 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:14p
       <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
       <button type="button" id="copiarPronto" disabled>Copiar</button>
     </div>
+  </section>
+
+  <section class="montar" id="montarLog" aria-labelledby="logTit">
+    <h2 id="logTit">Montar log / evidência</h2>
+    <p class="dica-log">Puxa sozinho o nick, o motivo, a regra e o tempo do quadro de cima. Confira, cole o link das evidências e copie para o canal de logs.</p>
+    <div id="logCampos" class="log-grid">
+      <label class="lg-full">Modelo do log<select id="lModelo"></select></label>
+      <label data-campo="lAplicador">Aplicada por<input id="lAplicador" type="text" placeholder="ex.: @ADM Amora" autocomplete="off"></label>
+      <label data-campo="lNomes" class="lg-full">Nome(s) do(s) jogador(es) — um por linha<textarea id="lNomes" rows="2"></textarea></label>
+      <label data-campo="lTempo">Tempo<input id="lTempo" type="text" placeholder="ex.: 40 ou 30 Dias" autocomplete="off"></label>
+      <label data-campo="lPunicao">Punição<input id="lPunicao" type="text" autocomplete="off"></label>
+      <label data-campo="lMotivo">Motivo<input id="lMotivo" type="text" autocomplete="off"></label>
+      <label data-campo="lRegra">Regra<input id="lRegra" type="text" placeholder="ex.: 4.3" autocomplete="off"></label>
+      <label data-campo="lServ">Servidor<input id="lServ" type="text" autocomplete="off"></label>
+      <label data-campo="lData">Data do ocorrido<span class="lg-linha"><input id="lData" type="text" autocomplete="off"><button type="button" id="lHoje" class="mini">Hoje</button></span></label>
+      <label data-campo="lInformar">Informar<input id="lInformar" type="text" placeholder="ex.: @LÍDER S04" autocomplete="off"></label>
+      <label data-campo="lRemocao" class="lg-full">Motivo da remoção<input id="lRemocao" type="text" autocomplete="off"></label>
+      <label data-campo="lObs" class="lg-full">Observação<input id="lObs" type="text" autocomplete="off"></label>
+      <label data-campo="lEvid" class="lg-full">Evidências (link do Drive)<input id="lEvid" type="url" placeholder="https://drive.google.com/..." autocomplete="off"></label>
+    </div>
+    <label class="lg-lab">Log pronto<textarea id="logPronto" rows="9" readonly></textarea></label>
+    <div class="resultado"><button type="button" id="copiarLog" class="btn-copiar">Copiar log</button><button type="button" id="lLimpar" class="mini">Limpar para o próximo</button></div>
   </section>
 
   <div class="tools">
@@ -334,6 +378,82 @@ document.getElementById("aconteceu").addEventListener("input", e => {
   selInf.value = String(ranking[0].i); marcarSug(); montar();
 });
 sugBox.addEventListener("click", e => { const b = e.target.closest(".sug"); if (!b) return; selInf.value = b.dataset.i; marcarSug(); montar(); });
+/* ---------- Montar log / evidência (modelos dos canais de logs) ---------- */
+const MODELOS = {
+  prisao:   { nome: "Registro de Prisão / Mute (cadeias-in-game)", tipo: "padrao", titulo: "REGISTRO DE PRISÃO / MUTE" },
+  ban:      { nome: "Banimento in game (banimentos-in-game)", tipo: "padrao", titulo: "BANIMENTO IN GAME", dias: true },
+  solban:   { nome: "Solicito banimento in game (solicitar-banimento)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IN GAME", dias: true },
+  solbanip: { nome: "Solicito banimento IP (solicitar-banimento-ip)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IP", dias: true },
+  solcad:   { nome: "Solicitação de prisão (solicitar-cadeia)", tipo: "solcad" },
+  staff:    { nome: "Solicito prisão / banimento (solicito-punição-staff)", tipo: "staff", dias: true },
+  tradeban: { nome: "Tradeban aplicado (tradeban-in-game)", tipo: "tradeban", dias: true },
+  removida: { nome: "Punição removida / alterada (punição-removida)", tipo: "removida" },
+};
+const CAMPOS_MOD = {
+  padrao:   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid"],
+  solcad:   ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid"],
+  staff:    ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lInformar", "lEvid"],
+  tradeban: ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid"],
+  removida: ["lAplicador", "lNomes", "lPunicao", "lMotivo", "lRemocao", "lInformar"],
+};
+const v = id => document.getElementById(id).value.trim();
+const hoje = () => { const d = new Date(); return [d.getDate(), d.getMonth() + 1, d.getFullYear()].map(n => String(n).padStart(2, "0")).join("/"); };
+function textoLog() {
+  const m = MODELOS[v("lModelo")], nomes = v("lNomes"), regra = v("lRegra"), motivo = v("lMotivo");
+  if (m.tipo === "padrao") return `${m.titulo}\n\nNOME: ${nomes}\n\nTEMPO: ${v("lTempo")}\n\nMOTIVO: ${motivo}\n\nOBS: ${v("lObs")}\n\nREGRA: ${regra}\n\n${v("lServ")}\n\nDATA DO OCORRIDO: ${v("lData")}\n\nEVIDÊNCIAS: ${v("lEvid")}`;
+  if (m.tipo === "solcad") return `SOLICITAÇÃO DE PRISÃO\n\nNOME: ${nomes}\n\nTEMPO: ${v("lTempo")}\n\nMOTIVO: ${motivo} ${regra}\n\nSERVIDOR: ${v("lServ")}\n\nDATA: ${v("lData")}\n\nOBSERVAÇÃO: ${v("lObs")}\n\nEVIDÊNCIA: ${v("lEvid")}`;
+  if (m.tipo === "staff") return `• SOLICITO: PRISÃO / BANIMENTO\n\n• NOME: ${nomes}\n\n• TEMPO: ${v("lTempo")}\n\n• MOTIVO: ${motivo} | ${regra}\n\n• SERVIDOR: ${v("lServ")}\n\n• INFORMAR: ${v("lInformar")}\n\n• OBSERVAÇÃO: ${v("lObs")}\n\n• EVIDÊNCIAS: ${v("lEvid")}`;
+  if (m.tipo === "tradeban") return `TRADEBAN APLICADO\n\n• | NOME: ${nomes}\n\n• | TEMPO: ${v("lTempo")}\n\n• | MOTIVO + ARTIGO: ${motivo} ${regra}\n\n• | SERVIDOR: ${v("lServ")}\n\n• | DATA DO OCORRIDO: ${v("lData")}\n\nOBS: ${v("lObs")}\n\n• | EVIDÊNCIA FIXADA: ${v("lEvid")}`;
+  return `⚠ | PUNIÇÃO REMOVIDA / ALTERADA\n\n• Aplicada por: ${v("lAplicador")}\n\n• Nickname: ${nomes}\n\n• Punição: ${v("lPunicao")}\n\n• Motivo: ${motivo}\n\n• Motivo da remoção: ${v("lRemocao")}\n\n• informar: ${v("lInformar")}`;
+}
+const LOG_IDS = ["lModelo", "lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid", "lInformar", "lAplicador", "lPunicao", "lRemocao"];
+const LEMBRAR = ["lModelo", "lServ", "lInformar", "lAplicador"];   // ficam salvos para a próxima vez
+function guardarLog() { try { const o = {}; LOG_IDS.forEach(id => o[id] = document.getElementById(id).value); o.jogador = jogador.value; localStorage.setItem("adm_log", JSON.stringify(o)); } catch (_) {} }
+function atualizarLog() {
+  const m = MODELOS[v("lModelo")], mostrar = new Set(CAMPOS_MOD[m.tipo]);
+  document.querySelectorAll("#logCampos [data-campo]").forEach(l => l.hidden = !mostrar.has(l.dataset.campo));
+  document.getElementById("logPronto").value = textoLog();
+  guardarLog();
+}
+document.getElementById("lModelo").innerHTML = Object.entries(MODELOS).map(([k, m]) => `<option value="${k}">${m.nome}</option>`).join("");
+document.getElementById("logCampos").addEventListener("input", atualizarLog);
+document.getElementById("logCampos").addEventListener("change", () => { puxarDoComando(); atualizarLog(); });
+document.getElementById("lHoje").addEventListener("click", () => { document.getElementById("lData").value = hoje(); atualizarLog(); });
+document.getElementById("lLimpar").addEventListener("click", () => {
+  ["lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lEvid", "lPunicao", "lRemocao"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("lData").value = hoje(); atualizarLog();
+});
+document.getElementById("copiarLog").addEventListener("click", () => {
+  const t = document.getElementById("logPronto").value, b = document.getElementById("copiarLog");
+  const ok = () => { b.textContent = "Copiado!"; setTimeout(() => b.textContent = "Copiar log", 1100); };
+  const sel = () => { const a = document.getElementById("logPronto"); a.focus(); a.select(); };
+  try { navigator.clipboard.writeText(t).then(ok, sel); } catch (_) { sel(); }
+});
+// Puxa nick, motivo, regra e tempo do quadro "Montar comando"
+function puxarDoComando() {
+  const r = LISTA[selInf.value], m = MODELOS[v("lModelo")];
+  if (jogador.value.trim()) document.getElementById("lNomes").value = jogador.value.trim();
+  if (!r) return;
+  document.getElementById("lMotivo").value = curto(r.infracao);
+  document.getElementById("lRegra").value = r.codigo;
+  document.getElementById("lPunicao").value = curto(r.infracao);
+  const partes = r.punicao.split("/").map(s => s.trim());
+  const t = (m.dias && partes.find(p => /dia|ban|perman/i.test(p))) || partes[0] || "";
+  document.getElementById("lTempo").value = t.replace(/^ban\s*/i, "");
+}
+["input", "change"].forEach(ev => [jogador, selInf, document.getElementById("aconteceu")].forEach(el => el.addEventListener(ev, () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0))));
+sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0));
+// Recupera o que estava preenchido (se fechar o app sem querer)
+(function () {
+  let o = {}; try { o = JSON.parse(localStorage.getItem("adm_log") || "{}"); } catch (_) {}
+  LOG_IDS.forEach(id => { if (o[id] != null && o[id] !== "") document.getElementById(id).value = o[id]; });
+  if (!o.lModelo) document.getElementById("lModelo").value = "prisao";
+  if (!document.getElementById("lServ").value) document.getElementById("lServ").value = "@SERVIDOR 04";
+  if (!document.getElementById("lData").value) document.getElementById("lData").value = hoje();
+  if (o.jogador) { jogador.value = o.jogador; montar(); }
+  atualizarLog();
+})();
+
 copiar.addEventListener("click", () => {
   const t = pronto.textContent;
   const ok = () => { copiar.textContent = "Copiado!"; setTimeout(() => copiar.textContent = "Copiar", 1100); };
