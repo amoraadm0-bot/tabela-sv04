@@ -93,6 +93,7 @@ body[data-aba="chat"] .btn-compacto{display:none!important}
 .opc-t small{color:var(--muted);font-size:12px}
 .opc-s{font-size:13px}
 .opc-e{font-size:12.5px;color:var(--muted);line-height:1.45}
+.rel-pre{white-space:pre-wrap;word-break:break-word;font:12.5px var(--mono);margin:0;max-height:260px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
 .regra-card details summary{cursor:pointer;color:var(--amber);font-size:13px}
 .chat-form{display:flex;gap:8px}
 .chat-form input{flex:1 1 auto;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px;font:16px var(--body)}
@@ -458,6 +459,8 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <button type="button" class="sug" data-chat-ex="id 18 vdm">id 18 vdm</button>
       <button type="button" class="sug" data-chat-ex="o que é rpfw">o que é rpfw</button>
       <button type="button" class="sug" data-chat-ex="o jogador saiu do jogo na ação">saiu do jogo na ação</button>
+      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button>
+      <button type="button" class="sug" data-chat-ex="cr">cr (ver relatório)</button>
       <button type="button" class="sug" data-chat-ex="regras de família">regras de família</button>
       <button type="button" class="sug" data-chat-ex="regras das facções">regras das facções</button>
       <button type="button" class="sug" data-chat-ex="ajuda">ajuda</button>
@@ -588,6 +591,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
         <li>O comando sai no formato <code>/comando ID TEMPO MOTIVO | CÓDIGO</code>, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. O <b>tempo</b> vem da tabela (1ª vez); se for reincidência, troque no campo <b>Tempo</b>. No kick não tem tempo.</li>
         <li><b>Tempo:</b> escolha a unidade tocando em <b>min</b>, <b>dias</b> ou <b>permanente</b>, e use os atalhos <b>1ª · 2ª · 3ª</b> que vêm da tabela (ex.: VDM → 60 min · 1 a 5 dias). Prisão e mute vêm em min; banimento vem em dias. Em <b>dias</b> ou <b>permanente</b> o comando vira <b>ban</b> — só para ADM <b>nível 2</b> em diante (escolha o seu nível no cadastro ou ao lado do seu nome). No nível 1 aparece "peça a um superior".</li>
         <li><b>🤖 Assistente:</b> na aba Assistente, converse como num chat. Ex.: <code>id 18 vdm</code> → ele mostra o significado, a explicação, a punição, os tempos (1ª, 2ª vez) e o comando pronto para copiar. Também responde <code>o que é rpfw</code> ou "o que faço se o jogador saiu do jogo na ação". Depois de montar, escreva <code>2ª vez</code> para a reincidência.</li>
+        <li><b>📝 Relatório pelo Assistente:</b> escreva <code>quero fazer relatório de turno</code> e responda campo por campo (<i>pular</i>, <i>voltar</i>, <i>parar</i>). Durante o jogo, anote a qualquer hora com <b>cr</b> (continua relatório) + campo + texto: <code>cr hp sem médicos</code>, <code>cr roxos dinheiro 2000</code>, <code>cr obs denúncia de hack</code>. Sem o nome do campo vai para Observação. <code>cr</code> sozinho mostra o relatório; <code>cr novo</code> começa outro. Fica tudo junto com a aba Relatório.</li>
         <li><b>⚡ Rápido:</b> digite a sigla e o ID juntos, ex.: <code>dm 123</code> ou <code>vdm Joao_Silva</code>. O comando já sai pronto para copiar.</li>
         <li><b>❓ Tirar dúvida:</b> logo abaixo do Montar comando, conte o que o jogador fez (ex.: "saiu do jogo quando ia ser preso"). O app mostra as regras que cabem, com explicação, punição e um botão para usar no comando.</li>
         <li>Escreva <b>o que aconteceu</b> (ex.: <code>atropelou de propósito</code>, <code>cortou caminho pela grama</code>, <code>xingou a mãe</code>). O site escolhe a infração sozinho e mostra outras sugestões para tocar, se a primeira não for a certa.</li>
@@ -1007,11 +1011,95 @@ function cartaoRegra(r) {
   </div>`;
 }
 function regraPorCodigo(cod) { return RC.filter(r => r.n === cod && r.g === "Regras do jogo")[0]; }
+/* 📝 Relatório de turno pelo chat: modo guiado + atalho "cr" (continua relatório) */
+const REL_CAMPOS = [
+  { id: "rLider", nome: "Líder de turno", ali: ["lider", "líder"], subst: true },
+  { id: "rAdms", nome: "Administradores em turno", ali: ["adms", "adm", "administradores"] },
+  { id: "rHP", nome: "HP", ali: ["hp", "hospital"] },
+  { id: "rPF", nome: "PF", ali: ["pf", "policia", "polícia"] },
+  { id: "rPFini", nome: "PF · armamento início", ali: ["pf inicio", "pf início", "pfinicio"], subst: true },
+  { id: "rPFfim", nome: "PF · armamento final", ali: ["pf final", "pf fim", "pffim", "pffinal"], subst: true },
+  { id: "rEB", nome: "EB", ali: ["eb", "exercito", "exército"] },
+  { id: "rEBarm", nome: "EB · armamento", ali: ["eb armamento", "eb arm", "ebarm"], subst: true },
+  { id: "rMidia", nome: "Mídia", ali: ["midia", "mídia"] },
+  { id: "rRoxos", nome: "Roxos", ali: ["roxos", "roxo"] },
+  { id: "rRoxosDin", nome: "Roxos · dinheiro", ali: ["roxos dinheiro", "roxo dinheiro", "roxos din"], subst: true },
+  { id: "rRoxosMat", nome: "Roxos · material", ali: ["roxos material", "roxo material", "roxos mat"], subst: true },
+  { id: "rVerdes", nome: "Verdes", ali: ["verdes", "verde"] },
+  { id: "rVerdesDin", nome: "Verdes · dinheiro", ali: ["verdes dinheiro", "verde dinheiro", "verdes din"], subst: true },
+  { id: "rVerdesMat", nome: "Verdes · material", ali: ["verdes material", "verde material", "verdes mat"], subst: true },
+  { id: "rKush", nome: "KUSH'$", ali: ["kush"] },
+  { id: "rLS", nome: "Los_Santos", ali: ["los santos", "los_santos", "lossantos", "ls"] },
+  { id: "rFam", nome: "Famílias", ali: ["familias", "famílias", "familia", "família", "fam"] },
+  { id: "rObs", nome: "Observação do turno", ali: ["obs", "observacao", "observação"] },
+  { id: "rPun", nome: "Punições aplicadas", ali: ["pun", "punicoes", "punições", "punicao", "punição"] },
+  { id: "rComunicar", nome: "Comunicar à liderança", ali: ["comunicar", "informar"], subst: true },
+];
+const REL = { guiado: false, passo: 0 };
+const campoEl = id => document.getElementById(id);
+function gravarCampo(c, texto, substituir) {
+  const el = campoEl(c.id), atual = el.value.trim();
+  el.value = (substituir || c.subst || !atual) ? texto : atual + "; " + texto;
+  atualizarRel();
+}
+function acharCampo(resto) {
+  const r = normA(resto);
+  const ord = REL_CAMPOS.flatMap(c => c.ali.map(a => ({ c, a: normA(a) }))).sort((x, y) => y.a.length - x.a.length);
+  for (const { c, a } of ord) if (r === a || r.startsWith(a + " ") || r.startsWith(a + ":")) return { c, texto: resto.slice(a.length).replace(/^[\s:,-]+/, "") };
+  return null;
+}
+function cartaoRelatorio() {
+  const t = textoRel();
+  return `<div class="chat-card" style="--c:var(--violet)">
+    <div class="duv-top"><b>📝 Relatório de turno</b><span>${esc(rv("rData") || hoje())}</span></div>
+    <pre class="rel-pre">${esc(t)}</pre>
+    <div class="resultado">
+      <button type="button" class="btn-copiar" data-copiar="${esc(t)}" style="padding:8px 14px;font-size:14px">Copiar</button>
+      <a class="btn-copiar" data-rel-dc href="https://discord.com/channels/1286404288708477050/1397080126893854881" target="_blank" rel="noopener" style="text-decoration:none;padding:8px 14px;font-size:14px;background:var(--discord)">📤 Abrir canal</a>
+      <button type="button" class="mini" data-rel-salvar>💾 Salvar</button>
+      <button type="button" class="mini" data-rel-aba>✏️ Abrir na aba Relatório</button>
+    </div></div>`;
+}
+function perguntaRel() {
+  const c = REL_CAMPOS[REL.passo], atual = campoEl(c.id).value.trim();
+  const extra = c.id === "rPun" ? " (ou escreva <i>puxar</i> para pegar dos seus logs de hoje)" : c.id === "rLider" && ATUAL && !atual ? ` (ou <i>eu</i> para ${esc(PERFIS[ATUAL].nome)})` : "";
+  msgChat(`<b>${REL.passo + 1}/${REL_CAMPOS.length} · ${esc(c.nome)}</b>${extra}${atual ? `<br><span class="dica-log">Já tem: “${esc(atual.slice(0, 120))}”. Escreva <i>ok</i> para manter.</span>` : ""}<br><span class="dica-log"><i>pular</i> · <i>voltar</i> · <i>parar</i></span>`);
+}
+function respostaGuiada(t) {
+  const n = normA(t), c = REL_CAMPOS[REL.passo];
+  if (/^(parar|sair|cancelar|fim)$/.test(n)) { REL.guiado = false; msgChat("Parei o relatório. O que você preencheu ficou salvo. Para continuar depois, escreva <i>relatório</i>, ou anote durante o jogo com <i>cr</i> (ex.: <i>cr hp fechado</i>)." + cartaoRelatorio()); return; }
+  if (/^(voltar)$/.test(n)) { REL.passo = Math.max(0, REL.passo - 1); perguntaRel(); return; }
+  if (!/^(pular|ok|-)$/.test(n)) {
+    if (c.id === "rPun" && /^puxar$/.test(n)) { document.getElementById("rPuxar").click(); }
+    else if (c.id === "rLider" && /^eu$/.test(n) && ATUAL) gravarCampo(c, PERFIS[ATUAL].nome, true);
+    else gravarCampo(c, t, true);
+  }
+  REL.passo++;
+  if (REL.passo >= REL_CAMPOS.length) { REL.guiado = false; msgChat("✅ Relatório pronto! Confira e copie:" + cartaoRelatorio()); return; }
+  perguntaRel();
+}
+function comandoCR(resto) {
+  if (!resto.trim() || /^(ver|mostrar|relatorio|relatório)$/.test(normA(resto.trim()))) { msgChat("Seu relatório até agora:" + cartaoRelatorio() + "<p class='dica-log' style='margin-top:6px'>Para anotar: <i>cr hp fechado</i> · <i>cr roxos dinheiro 2000</i> · <i>cr obs denúncia de hack na fazenda</i>. Sem campo, vai para Observação.</p>"); return; }
+  if (/^(novo|limpar|zerar)$/.test(normA(resto.trim()))) { R_IDS.filter(id => !R_FICA.includes(id)).forEach(id => campoEl(id).value = ""); campoEl("rData").value = hoje(); atualizarRel(); msgChat("🧹 Comecei um relatório novo (líder, ADMs e comunicar ficaram)."); return; }
+  const a = acharCampo(resto.trim());
+  if (a && a.texto) { gravarCampo(a.c, a.texto); msgChat(`✅ Anotado em <b>${esc(a.c.nome)}</b>: “${esc(campoEl(a.c.id).value.slice(-160))}”`); return; }
+  const obs = REL_CAMPOS.find(c => c.id === "rObs"); gravarCampo(obs, resto.trim());
+  msgChat(`✅ Anotado em <b>Observação do turno</b>. <span class="dica-log">(Para outro campo, comece com o nome dele: <i>cr hp …</i>, <i>cr pf …</i>, <i>cr roxos …</i>)</span>`);
+}
 function responder(texto) {
   const t = texto.trim(); if (!t) return;
   msgChat(esc(t), "eu"); const n = normA(t);
+  // 📝 relatório: atalho "cr" (continua relatório) funciona a qualquer momento e não mistura com o resto
+  const mCR = t.match(/^(?:cr|c\.r\.?|continua\s+relat[oó]rio)(?:\s+|:|$)(.*)$/i);
+  if (mCR) { comandoCR(mCR[1] || ""); return; }
+  if (REL.guiado) { respostaGuiada(t); return; }
+  if (/^(quero\s+)?(fazer|montar|come[cç]ar|abrir)?\s*(o\s+|um\s+)?relat[oó]rio(\s+de\s+turno)?$/.test(n)) {
+    REL.guiado = true; REL.passo = 0;
+    msgChat("Vamos montar o relatório de turno! Vou perguntar campo por campo. Responda do seu jeito.<br><span class='dica-log'>Durante o jogo você também pode anotar a qualquer hora com <b>cr</b> + campo + texto (ex.: <i>cr hp sem médicos</i>), sem misturar com os comandos.</span>");
+    perguntaRel(); return;
+  }
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
-  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
+  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
   // regra pelo número: "regra 8.30", "artigo 4.22", "6.8 facção"
   const mNum = n.match(/\b(?:regra|artigo|art)?\s*(\d{1,2}\.\d{1,2})\b/);
   if (mNum && /(regra|artigo|art\b|^\d+\.\d+$|fac|famil|policia|hospital|exercito|midia|acao|invas)/.test(n)) {
@@ -1088,6 +1176,9 @@ chatLista.addEventListener("click", e => {
   if (cp) { const t = cp.dataset.copiar; try { navigator.clipboard.writeText(t).then(() => { cp.textContent = "Copiado!"; setTimeout(() => cp.textContent = "Copiar", 1100); }); } catch (_) {} return; }
   const op = e.target.closest("[data-chat-op]");
   if (op) { const card = op.closest(".chat-card"); card.outerHTML = cartaoInfracao(+op.dataset.i, CTX.id, +op.dataset.chatOp); return; }
+  if (e.target.closest("[data-rel-salvar]")) { document.getElementById("relSalvar").click(); msgChat("💾 Relatório salvo em <b>Relatórios salvos</b> (aba Relatório)."); return; }
+  if (e.target.closest("[data-rel-aba]")) { mostrar("relatorio"); history.replaceState(history.state, "", "#relatorio"); window.scrollTo(0, 0); return; }
+  if (e.target.closest("[data-rel-dc]")) { try { navigator.clipboard.writeText(textoRel()).catch(() => {}); } catch (_) {} msgChat("📋 Relatório copiado. No canal 📝 relatório-de-turno, cole e envie."); return; }
   const rg = e.target.closest("[data-regra]");
   if (rg) { const r = RC[+rg.dataset.regra]; msgChat(esc(r.n ? "regra " + r.n : "regra"), "eu"); msgChat(cartaoRegra(r)); return; }
   const es = e.target.closest("[data-chat-esc]");
