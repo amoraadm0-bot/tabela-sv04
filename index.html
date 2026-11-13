@@ -460,7 +460,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <button type="button" class="sug" data-chat-ex="id 18 vdm">id 18 vdm</button>
       <button type="button" class="sug" data-chat-ex="o que é rpfw">o que é rpfw</button>
       <button type="button" class="sug" data-chat-ex="o jogador saiu do jogo na ação">saiu do jogo na ação</button>
-      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button><button type="button" class="sug" data-chat-ex="bp">⏱️ bate-ponto</button><button type="button" class="sug" data-chat-ex="soltar id 18">🔓 soltar id 18</button><button type="button" class="sug" data-chat-ex="tirar mute id 18">🔊 tirar mute id 18</button>
+      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button><button type="button" class="sug" data-chat-ex="bp">⏱️ bate-ponto</button><button type="button" class="sug" data-chat-ex="solicitar ban id 34 darkrp 10 dias">📙 solicitar ban</button><button type="button" class="sug" data-chat-ex="soltar id 18">🔓 soltar id 18</button><button type="button" class="sug" data-chat-ex="tirar mute id 18">🔊 tirar mute id 18</button>
       <button type="button" class="sug" data-chat-ex="cr">cr (ver relatório)</button>
       <button type="button" class="sug" data-chat-ex="regras de família">regras de família</button>
       <button type="button" class="sug" data-chat-ex="regras das facções">regras das facções</button>
@@ -934,6 +934,8 @@ function acharSigla(token) {
   return idx;
 }
 document.getElementById("rapido").addEventListener("input", e => {
+  const sb = lerSolBan(e.target.value);
+  if (sb && sb.inf >= 0) { preencherSolBan(sb); pronto.textContent = "📙 Solicitação de banimento pronta na aba Evidência (toque em “🧾 Montar evidência desta punição →”)"; pronto.className = "vazio"; copiar.disabled = true; return; }
   const tp = lerTirar(e.target.value);
   if (tp && tp.alvo) { selInf.value = ""; jogador.value = tp.alvo; pronto.textContent = tp.txt; pronto.className = ""; copiar.disabled = false; return; }
   const partes = e.target.value.trim().split(/\s+/).filter(Boolean);
@@ -1205,6 +1207,64 @@ function comandoBP(resto) {
   msgChat((r ? "✅ Pronto. " : "") + "Seu bate-ponto:" + cartaoBP() + "<p class='dica-log' style='margin-top:6px'>Ajustar: <i>bp 18 21</i> (horário) · <i>bp noite</i> · <i>bp lider eu</i> · <i>bp adms @Fulano @Ciclano</i></p>");
 }
 
+
+// 📙 solicitação de banimento pelo chat / Rápido: "solicitar ban id 34 ina 5 dias obs atrapalhando"
+function lerSolBan(t) {
+  const n = normA(t);
+  const m = n.match(/^(?:quero\s+)?(?:criar\s+|fazer\s+|montar\s+)?(?:solicit\w*|pedir|pede|pedido|sb)\s+(?:de\s+|o\s+|um\s+|uma\s+)?(?:ban\w*)?\s*(.*)$/);
+  if (!m || !/^(?:quero\s+)?(?:criar\s+|fazer\s+|montar\s+)?(?:solicit\w*\s+(?:de\s+|o\s+|um\s+|uma\s+)?ban|pedir\s+(?:o\s+|um\s+)?ban|pede\s+ban|pedido\s+de\s+ban|sb\s)/.test(n + " ")) return null;
+  const orig = t.replace(/^.*?\bban\w*\b\s*/i, "").replace(/^sb\s+/i, "");
+  let resto = orig, obs = "";
+  const mo = resto.match(/\bobs\.?:?\s*(.*)$/i); if (mo) { obs = mo[1].trim(); resto = resto.slice(0, mo.index); }
+  const ip = /\bip\b/i.test(resto); resto = resto.replace(/\bip\b/ig, " ");
+  let dias = "", perm = false;
+  const md = resto.match(/\b(\d{1,4})\s*(?:d|dia|dias)\b/i); if (md) { dias = md[1]; resto = resto.replace(md[0], " "); }
+  if (/\bperm\w*\b/i.test(resto)) { perm = true; resto = resto.replace(/\bperm\w*\b/ig, " "); }
+  const mNick = resto.match(/\b([A-Za-zÀ-ÿ0-9]+_[A-Za-zÀ-ÿ0-9_]+)\b/);
+  if (mNick) resto = resto.replace(mNick[0], " ");
+  const mId = mNick ? null : (resto.match(/(?:\bid\s*:?\s*|#)(\d{1,6})(?![\d.])/i) || resto.match(/(?<![\d.])(\d{1,6})(?![\d.])/));
+  if (mId) resto = resto.replace(mId[0], " ");
+  const alvo = mNick ? mNick[1] : mId ? mId[1] : "";
+  resto = resto.replace(/\b(id|nick|do|da|de|o|a|por|motivo|para|pro|pra)\b/gi, " ").replace(/\s+/g, " ").trim();
+  let inf = -1;
+  const mc = resto.match(/\b(\d{1,2}\.\d{1,2})\b/); if (mc) inf = LISTA.findIndex(r => r.codigo === mc[1] && SECAO_DE.get(r) === "bans");
+  if (mc && inf < 0) inf = LISTA.findIndex(r => r.codigo === mc[1]);
+  if (inf < 0) resto.split(/\s+/).forEach(w => { if (inf < 0 && w) inf = siglaAproximada(w); });
+  if (inf < 0 && resto) { const rk = rankDuvida(resto); if (rk.length) inf = rk[0].i; }
+  // prefere a linha de Banimentos quando a mesma sigla existe em mais de uma seção
+  if (inf >= 0 && SECAO_DE.get(LISTA[inf]) !== "bans") { const sig = normA(curto(LISTA[inf].infracao)); const b = LISTA.findIndex(r => SECAO_DE.get(r) === "bans" && normA(curto(r.infracao)) === sig); if (b >= 0) inf = b; }
+  return { alvo, inf, dias, perm, ip, obs };
+}
+function preencherSolBan(x) {
+  selInf.value = String(x.inf); jogador.value = x.alvo; infTempo = ""; ajustarTempo();
+  if (x.perm) { marcarUnid("perm"); document.getElementById("tempoCmd").value = ""; }
+  else if (x.dias) { marcarUnid("dias"); document.getElementById("tempoCmd").value = x.dias; }
+  else { const o = opcoesTempo(LISTA[x.inf]).find(o => o.u !== "min"); if (o) { marcarUnid(o.u); document.getElementById("tempoCmd").value = o.n; x.faixa = o.rot; } else { marcarUnid("dias"); document.getElementById("tempoCmd").value = ""; } }
+  marcarSug(); montar(); ultimaInf = ""; puxarDoComando(true);
+  const mod = x.ip || /\bIP\b/.test(LISTA[x.inf].punicao) && /3\.14|3\.11/.test(LISTA[x.inf].codigo) ? "solbanip" : "solban";
+  document.getElementById("lModelo").value = mod; selCanal.value = MODELOS[mod].canal; linkCanal();
+  document.getElementById("lTempo").value = v("lTempo").replace(/^1 Dias$/, "1 Dia");
+  document.getElementById("lObs").value = x.obs || "";
+  if (!v("lData")) document.getElementById("lData").value = hoje();
+  atualizarLog();
+  return mod;
+}
+function solicitarBan(t) {
+  const x = lerSolBan(t); if (!x) return false;
+  if (x.inf < 0) { msgChat("📙 <b>Solicitação de banimento</b>: me diga o nick/ID, a infração e o tempo. Ex.: <i>solicitar ban Joao_Silva ina 5 dias obs atrapalhando o trabalho</i> · <i>solicitar ban id 34 darkrp 10 dias</i> · <i>solicitar ban ip id 34 3.14 365 dias</i>"); return true; }
+  const mod = preencherSolBan(x), txt = textoLog();
+  msgChat(`${x.alvo ? "" : "<span class='dica-log'>Faltou o nick do jogador. Escreva de novo com o nick, ou complete na aba Evidência.</span>"}<div class="chat-card" style="--c:#b02a37">
+    <div class="duv-top"><b>📙 ${esc(MODELOS[mod].titulo)}</b><span>${esc(curto(LISTA[x.inf].infracao))} · ${esc(LISTA[x.inf].codigo)}</span></div>
+    <pre class="rel-pre">${esc(txt)}</pre>
+    <div class="resultado">
+      <button type="button" class="btn-copiar" data-copiar="${esc(txt)}" style="padding:8px 14px;font-size:14px">Copiar</button>
+      <a class="btn-copiar" data-sb-dc href="https://discord.com/channels/${DC_SERVIDOR}/${MODELOS[mod].canal}" target="_blank" rel="noopener" style="text-decoration:none;padding:8px 14px;font-size:14px;background:var(--discord)">📤 Abrir canal</a>
+      <button type="button" class="mini" data-sb-aba>📎 Anexar evidência (aba Evidência)</button>
+    </div>
+    ${x.faixa && /\sa\s/.test(x.faixa) ? `<p class="dica-log" style="margin:6px 0 0">⏰ A tabela diz <b>${esc(x.faixa)}</b>. Coloquei o menor; para outro, escreva de novo com o tempo (ex.: <i>… 3 dias</i>).</p>` : ""}
+    <p class="dica-log" style="margin:6px 0 0">Não esqueça das <b>evidências</b> (link do Drive ou anexo). Para mudar: <i>obs …</i> no fim, ou outro tempo (ex.: <i>10 dias</i>).</p></div>`);
+  return true;
+}
 // 🔓 tirar punição: soltar da prisão / tirar mute
 function lerTirar(t) {
   const n = normA(t);
@@ -1244,6 +1304,7 @@ function responder(texto) {
   const mBP = t.match(/^(?:bp|bate[\s-]?ponto|bater\s+(?:o\s+)?ponto|(?:quero\s+)?(?:fazer|montar)\s+(?:o\s+)?bate[\s-]?ponto)(?:\s+|:|$)(.*)$/i);
   if (mBP) { comandoBP(mBP[1] || ""); return; }
   if (REL.guiado) { respostaGuiada(t); return; }
+  if (solicitarBan(t)) return;
   if (tirarPunicao(t)) return;
   if (/^(quero\s+)?(fazer|montar|come[cç]ar|abrir)?\s*(o\s+|um\s+)?relat[oó]rio(\s+de\s+turno)?$/.test(n)) {
     REL.guiado = true; REL.passo = 0;
@@ -1251,7 +1312,7 @@ function responder(texto) {
     perguntaRel(); return;
   }
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
-  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Soltar da prisão: <i>soltar id 18</i> · Tirar mute: <i>tirar mute id 18</i> · <i>tirar mute do report 18</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
+  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Solicitar banimento: <i>solicitar ban Joao_Silva ina 5 dias obs …</i><br>• Soltar da prisão: <i>soltar id 18</i> · Tirar mute: <i>tirar mute id 18</i> · <i>tirar mute do report 18</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
   // regra pelo número: "regra 8.30", "artigo 4.22", "6.8 facção"
   const mNum = n.match(/\b(?:regra|artigo|art)?\s*(\d{1,2}\.\d{1,2})\b/);
   if (mNum && /(regra|artigo|art\b|^\d+\.\d+$|fac|famil|policia|hospital|exercito|midia|acao|invas)/.test(n)) {
@@ -1330,6 +1391,8 @@ chatLista.addEventListener("click", e => {
   if (op) { const card = op.closest(".chat-card"); card.outerHTML = cartaoInfracao(+op.dataset.i, CTX.id, +op.dataset.chatOp); return; }
   if (e.target.closest("[data-rel-salvar]")) { document.getElementById("relSalvar").click(); msgChat("💾 Relatório salvo em <b>Relatórios salvos</b> (aba Relatório)."); return; }
   if (e.target.closest("[data-rel-aba]")) { mostrar("relatorio"); history.replaceState(history.state, "", "#relatorio"); window.scrollTo(0, 0); return; }
+  if (e.target.closest("[data-sb-dc]")) { try { navigator.clipboard.writeText(textoLog()).catch(() => {}); } catch (_) {} msgChat("📋 Solicitação copiada. No canal, cole, anexe a evidência e envie."); return; }
+  if (e.target.closest("[data-sb-aba]")) { mostrar("evidencia"); history.replaceState(history.state, "", "#evidencia"); window.scrollTo(0, 0); return; }
   if (e.target.closest("[data-bp-dc]")) { copiarBP(); msgChat("📋 Bate-ponto copiado. No canal 🕐 bate-ponto, cole e envie."); return; }
   if (e.target.closest("[data-bp-aba]")) { mostrar("relatorio"); history.replaceState(history.state, "", "#relatorio"); window.scrollTo(0, 0); return; }
   if (e.target.closest("[data-rel-dc]")) { try { navigator.clipboard.writeText(textoRel()).catch(() => {}); } catch (_) {} msgChat("📋 Relatório copiado. No canal 📝 relatório-de-turno, cole e envie."); return; }
@@ -1357,8 +1420,8 @@ document.getElementById("duvRes").addEventListener("click", e => {
 const MODELOS = {
   prisao:   { nome: "Registro de Prisão / Mute (cadeias-in-game)", tipo: "padrao", titulo: "REGISTRO DE PRISÃO / MUTE", canal: "1439558958179418142" },
   ban:      { nome: "Banimento in game (banimentos-in-game)", tipo: "padrao", titulo: "BANIMENTO IN GAME", dias: true, canal: "1439559036671496244" },
-  solban:   { nome: "Solicito banimento in game (solicitar-banimento)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IN GAME", dias: true, canal: "1439559077997842534" },
-  solbanip: { nome: "Solicito banimento IP (solicitar-banimento-ip)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IP", dias: true, canal: "1439559116183044108" },
+  solban:   { nome: "Solicito banimento in game (solicitar-banimento)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IN GAME", dias: true, emoji: true, canal: "1439559077997842534" },
+  solbanip: { nome: "Solicito banimento IP (solicitar-banimento-ip)", tipo: "padrao", titulo: "SOLICITO BANIMENTO IP", dias: true, emoji: true, canal: "1439559116183044108" },
   solcad:   { nome: "Solicitação de prisão (solicitar-cadeia)", tipo: "solcad", canal: "1439559001216913448" },
   staff:    { nome: "Solicito prisão / banimento (solicito-punição-staff)", tipo: "staff", dias: true, canal: "1500597828991586444" },
   tradeban: { nome: "Tradeban aplicado (tradeban-in-game)", tipo: "tradeban", dias: true, canal: "1560969813482799114" },
@@ -1384,6 +1447,7 @@ const v = id => document.getElementById(id).value.trim();
 const hoje = () => { const d = new Date(); return [d.getDate(), d.getMonth() + 1, d.getFullYear()].map(n => String(n).padStart(2, "0")).join("/"); };
 function textoLog() {
   const m = MODELOS[v("lModelo")], nomes = v("lNomes"), regra = v("lRegra"), motivo = v("lMotivo");
+  if (m.emoji) return `${m.titulo} 🐬\n\n🪪 NOME: ${nomes}\n\n⏰ TEMPO: ${v("lTempo")}\n\n🛂 MOTIVO: ${motivo}\n\n📑 REGRA: ${regra}\n\n✍️ obs: ${v("lObs")}\n\n📢 ${v("lServ")}\n🗓️ DATA DO OCORRIDO: ${v("lData")}\n\n📸 EVIDÊNCIAS: ${v("lEvid")}`;
   if (m.tipo === "padrao") return `${m.titulo}\n\nNOME: ${nomes}\n\nTEMPO: ${v("lTempo")}\n\nMOTIVO: ${motivo}\n\nOBS: ${v("lObs")}\n\nREGRA: ${regra}\n\n${v("lServ")}\n\nDATA DO OCORRIDO: ${v("lData")}\n\nEVIDÊNCIAS: ${v("lEvid")}`;
   if (m.tipo === "solcad") return `SOLICITAÇÃO DE PRISÃO\n\nNOME: ${nomes}\n\nTEMPO: ${v("lTempo")}\n\nMOTIVO: ${motivo} ${regra}\n\nSERVIDOR: ${v("lServ")}\n\nDATA: ${v("lData")}\n\nOBSERVAÇÃO: ${v("lObs")}\n\nEVIDÊNCIA: ${v("lEvid")}`;
   if (m.tipo === "staff") return `• SOLICITO: PRISÃO / BANIMENTO\n\n• NOME: ${nomes}\n\n• TEMPO: ${v("lTempo")}\n\n• MOTIVO: ${motivo} | ${regra}\n\n• SERVIDOR: ${v("lServ")}\n\n• INFORMAR: ${v("lInformar")}\n\n• OBSERVAÇÃO: ${v("lObs")}\n\n• EVIDÊNCIAS: ${v("lEvid")}`;
