@@ -381,9 +381,10 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <h3>Montar o comando (mais rápido)</h3>
       <ol>
         <li>No quadro <b>Montar comando</b>, digite o <b>nick ou ID do jogador</b>.</li>
+        <li>O comando sai no formato <code>/comando ID TEMPO MOTIVO | CÓDIGO</code>, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. O <b>tempo</b> vem da tabela (1ª vez); se for reincidência, troque no campo <b>Tempo</b>. No kick não tem tempo.</li>
         <li>Escreva <b>o que aconteceu</b> (ex.: <code>atropelou de propósito</code>, <code>cortou caminho pela grama</code>, <code>xingou a mãe</code>). O site escolhe a infração sozinho e mostra outras sugestões para tocar, se a primeira não for a certa.</li>
         <li>Ou escolha a <b>infração</b> direto na lista, manualmente.</li>
-        <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
+        <li>O comando aparece pronto, ex.: <code>/jail ADM_Amora 60 VDM | 4.3</code>. Toque em <b>Copiar</b> e cole no jogo.</li>
       </ol>
 
       <h3>Montar o log / evidência</h3>
@@ -411,7 +412,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <ol>
         <li>Toque no <b>comando azul</b> da linha. Ele é copiado já com a infração e o código do artigo, e aparece "Copiado!".</li>
         <li>Cole no jogo e troque <code>[nick]</code> ou <code>[ID]</code> pelo do jogador.</li>
-        <li>Exemplo: <code>/jail ADM_Amora VDM | 4.3</code></li>
+        <li>Exemplo: <code>/jail ADM_Amora 60 VDM | 4.3</code></li>
         <li>Use o tempo que está na coluna <b>Punição / Tempo</b>.</li>
       </ol>
 
@@ -471,6 +472,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
     <div id="sugestoes" class="sugestoes" hidden></div>
     <div class="campos">
       <select id="infracaoSel" aria-label="Infração (escolher manualmente)"></select>
+      <input id="tempoCmd" type="text" inputmode="numeric" placeholder="Tempo (min ou dias)" aria-label="Tempo da punição" autocomplete="off" style="flex:0 1 150px">
     </div>
     <div class="resultado">
       <div id="cmdPronto" class="vazio" aria-live="polite">Digite o nick e escolha a infração</div>
@@ -548,7 +550,9 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const curto = n => n.replace(/\s*\(.*?\)\s*/g, " ").trim();
 const SIG = (typeof SIGNIFICADOS !== "undefined") ? SIGNIFICADOS : {};
 const signif = r => SIG[r.infracao] || SIG[curto(r.infracao)] || "";
-const completo = r => r.comando ? `${r.comando} ${curto(r.infracao)} | ${r.codigo}` : "";
+/* Formato do comando: /comando [ID] TEMPO MOTIVO | CÓDIGO  (sem tempo quando é kick) */
+const tempoPadrao = r => { const m = String(r.punicao || "").match(/(\d+)\s*(?:a\s*\d+\s*)?(min|dia)/i); return m ? m[1] : ""; };
+const completo = (r, tempo) => { if (!r.comando) return ""; const t = tempo ?? tempoPadrao(r); return `${r.comando}${t ? " " + t : ""} ${curto(r.infracao)} | ${r.codigo}`; };
 const comAlvo = t => t;
 /* Uma cor para cada infração (a mesma sigla tem sempre a mesma cor) */
 const corDe = n => { const s = String(n).replace(/\s*\(.*?\)\s*/g, " ").trim().toLowerCase(); let x = 0; for (const ch of s) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return `hsl(${(x * 137.508) % 360} 75% 64%)`; };
@@ -604,12 +608,15 @@ function montar() {
   const r = LISTA[selInf.value], n = jogador.value.trim();
   if (!r) { pronto.textContent = "Digite o nick e escolha a infração"; pronto.className = "vazio"; copiar.disabled = true; return; }
   if (!r.comando) { pronto.textContent = "Admin Level 1 não tem comando para isso. Peça a um superior e use o quadro \"Monte sua evidência\" abaixo para solicitar."; pronto.className = "vazio"; copiar.disabled = true; return; }
-  const t = completo(r);
+  const t = completo(r, document.getElementById("tempoCmd").value.trim());
   pronto.textContent = n ? t.replace(/\[(nick|ID)\]|\{ID\}/g, n) : t;
   pronto.className = ""; copiar.disabled = false;
 }
 jogador.addEventListener("input", montar);
-selInf.addEventListener("change", () => { marcarSug(); montar(); });
+let infTempo = "";
+function ajustarTempo() { if (selInf.value !== infTempo) { infTempo = selInf.value; const r = LISTA[selInf.value]; document.getElementById("tempoCmd").value = r ? tempoPadrao(r) : ""; } }
+document.getElementById("tempoCmd").addEventListener("input", montar);
+selInf.addEventListener("change", () => { ajustarTempo(); marcarSug(); montar(); });
 
 // Preenchimento automático pelo "O que aconteceu?"
 const PCH = (typeof PALAVRAS_CHAVE !== "undefined") ? PALAVRAS_CHAVE : {};
@@ -639,9 +646,9 @@ document.getElementById("aconteceu").addEventListener("input", e => {
   const secao = r => SECOES.find(s => s.linhas.includes(r)).titulo;
   sugBox.innerHTML = "Sugestões: " + ranking.map(x => { const r = LISTA[x.i]; return `<button type="button" class="sug" data-i="${x.i}">${esc(r.infracao)} · ${esc(r.codigo)} <small>(${esc(secao(r))})</small></button>`; }).join("");
   sugBox.hidden = false;
-  selInf.value = String(ranking[0].i); marcarSug(); montar();
+  selInf.value = String(ranking[0].i); ajustarTempo(); marcarSug(); montar();
 });
-sugBox.addEventListener("click", e => { const b = e.target.closest(".sug"); if (!b) return; selInf.value = b.dataset.i; marcarSug(); montar(); });
+sugBox.addEventListener("click", e => { const b = e.target.closest(".sug"); if (!b) return; selInf.value = b.dataset.i; ajustarTempo(); marcarSug(); montar(); });
 /* ---------- Montar log / evidência (modelos dos canais de logs) ---------- */
 const MODELOS = {
   prisao:   { nome: "Registro de Prisão / Mute (cadeias-in-game)", tipo: "padrao", titulo: "REGISTRO DE PRISÃO / MUTE", canal: "1439558958179418142" },
@@ -730,7 +737,8 @@ function puxarDoComando() {
   document.getElementById("lPunicao").value = curto(r.infracao);
   const partes = r.punicao.split("/").map(s => s.trim());
   const t = (m.dias && partes.find(p => /dia|ban|perman/i.test(p))) || partes[0] || "";
-  document.getElementById("lTempo").value = t.replace(/^ban\s*/i, "");
+  const tc = document.getElementById("tempoCmd").value.trim();
+  document.getElementById("lTempo").value = tc ? (/dia/i.test(t) && m.dias ? tc + " Dias" : tc) : t.replace(/^ban\s*/i, "");
 }
 ["input", "change"].forEach(ev => [jogador, selInf, document.getElementById("aconteceu")].forEach(el => el.addEventListener(ev, () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0))));
 sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0));
