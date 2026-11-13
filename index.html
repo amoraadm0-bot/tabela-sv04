@@ -84,6 +84,15 @@ body[data-aba="chat"] .btn-compacto{display:none!important}
 .chat-cmd code{font:700 14px var(--mono);flex:1 1 auto;min-width:0;word-break:break-word}
 .chat-cmd .btn-copiar{padding:7px 14px;font-size:14px;background:var(--teal);color:#06231d}
 .chat-ops,.chat-ex{display:flex;gap:6px;flex-wrap:wrap}
+.chat-num{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.opc{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:10px;color:var(--fg);font:14px var(--body);cursor:pointer;width:100%}
+.opc:hover,.opc:focus-visible{border-color:var(--c);outline:none}
+.opc-n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--c);color:#0c0e13;font-weight:800;display:flex;align-items:center;justify-content:center}
+.opc-t{display:flex;flex-direction:column;gap:3px;min-width:0}
+.opc-t b{color:var(--c)}
+.opc-t small{color:var(--muted);font-size:12px}
+.opc-s{font-size:13px}
+.opc-e{font-size:12.5px;color:var(--muted);line-height:1.45}
 .chat-form{display:flex;gap:8px}
 .chat-form input{flex:1 1 auto;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px;font:16px var(--body)}
 .chat-form .btn-copiar{background:var(--discord)}
@@ -980,6 +989,9 @@ function responder(texto) {
   msgChat(esc(t), "eu"); const n = normA(t);
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
   if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i>"); return; }
+  // resposta com número (escolha da lista)
+  const num = n.match(/^(?:opcao|opção|numero|número|n)?\s*([1-9])$/);
+  if (num && CTX.opcoes && CTX.opcoes[+num[1] - 1] !== undefined) { CTX.inf = CTX.opcoes[+num[1] - 1]; CTX.opcoes = null; msgChat(cartaoInfracao(CTX.inf, CTX.id, 0)); return; }
   // ID / nick
   const toksT = t.split(/\s+/); let id = "", usados = new Set();
   toksT.forEach((w, k) => {
@@ -1010,7 +1022,17 @@ function responder(texto) {
   if (!res.length && !extras.length) { msgChat(id ? `Anotei o ID <b>${esc(id)}</b>. Agora me diga o que ele fez ou a sigla (ex.: <i>vdm</i>).` : "Não entendi bem. Tente: <i>id 18 vdm</i>, <i>o que é MG</i> ou conte o que aconteceu (ex.: <i>atirou sem motivo</i>)."); return; }
   if (extras.length && (!res.length || res[0].pts <= 2)) { msgChat(extras.map(o => `<div class="chat-card" style="--c:var(--amber)"><div class="duv-top"><b>${esc(o.titulo)}</b><span>fora da tabela</span></div><p>${esc(o.texto)}</p></div>`).join("")); if (!res.length) return; }
   if (res.length && (res.length === 1 || res[0].pts >= res[1].pts + 2)) { CTX.inf = res[0].i; msgChat("Pelo que você contou, o mais provável é:" + cartaoInfracao(res[0].i, CTX.id, 0)); return; }
-  msgChat("Pode ser uma destas. Qual combina mais?<div class='chat-ops'>" + res.map(x => `<button type="button" class="sug" data-chat-esc="${x.i}">${esc(x.r.infracao)} · ${esc(x.r.codigo)} <small>(${esc((SECOES.find(s => s.id === SECAO_DE.get(x.r)) || {}).titulo || "")})</small></button>`).join("") + "</div>");
+  CTX.opcoes = res.map(x => x.i);
+  msgChat("Pode ser uma destas. Qual combina mais? Toque na opção ou responda com o número.<div class='chat-num'>" + res.map((x, n) => {
+    const sec = (SECOES.find(s => s.id === SECAO_DE.get(x.r)) || {}).titulo || "";
+    const ex = EXPL[x.r.infracao] || EXPL[curto(x.r.infracao)] || "";
+    return `<button type="button" class="opc" data-chat-esc="${x.i}" style="--c:${corDe(x.r.infracao)}">
+      <span class="opc-n">${n + 1}</span>
+      <span class="opc-t"><b>${esc(x.r.infracao)} · ${esc(x.r.codigo)}</b> <small>${esc(sec)} · ${esc(x.r.punicao)}</small>
+      ${signif(x.r) ? `<span class="opc-s">${esc(signif(x.r))}</span>` : ""}
+      ${ex ? `<span class="opc-e">${esc(ex.length > 220 ? ex.slice(0, 217) + "…" : ex)}</span>` : ""}</span>
+    </button>`;
+  }).join("") + "</div>");
 }
 document.getElementById("chatForm").addEventListener("submit", e => { e.preventDefault(); const v = chatIn.value; chatIn.value = ""; responder(v); chatIn.focus(); });
 chatLista.addEventListener("click", e => {
@@ -1019,7 +1041,7 @@ chatLista.addEventListener("click", e => {
   const op = e.target.closest("[data-chat-op]");
   if (op) { const card = op.closest(".chat-card"); card.outerHTML = cartaoInfracao(+op.dataset.i, CTX.id, +op.dataset.chatOp); return; }
   const es = e.target.closest("[data-chat-esc]");
-  if (es) { CTX.inf = +es.dataset.chatEsc; msgChat(esc(es.textContent), "eu"); msgChat(cartaoInfracao(CTX.inf, CTX.id, 0)); return; }
+  if (es) { CTX.inf = +es.dataset.chatEsc; CTX.opcoes = null; msgChat(esc(curto(LISTA[CTX.inf].infracao)), "eu"); msgChat(cartaoInfracao(CTX.inf, CTX.id, 0)); return; }
   const ev = e.target.closest("[data-chat-evid]");
   if (ev) {
     const i = +ev.dataset.chatEvid, o = opcoesTempo(LISTA[i])[+ev.dataset.op];
