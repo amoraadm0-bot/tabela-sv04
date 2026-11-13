@@ -370,7 +370,8 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
     <label id="gEmailBox" hidden>E-mail<input id="gEmail" type="email" autocomplete="email" placeholder="seu e-mail"></label>
     <label id="gNivelBox" hidden>Seu nível de ADM<select id="gNivel"><option value="1">Nível 1</option><option value="2">Nível 2</option><option value="3">Nível 3</option><option value="4">Nível 4</option><option value="5">Nível 5</option></select></label>
     <label id="gServBox" hidden>De qual servidor você é?<select id="gServ"><option value="">Escolha o servidor...</option><option value="01">Servidor 01</option><option value="02">Servidor 02</option><option value="03">Servidor 03</option><option value="04">Servidor 04</option><option value="05">Servidor 05</option><option value="06">Servidor 06</option><option value="07">Servidor 07</option><option value="08">Servidor 08</option><option value="09">Servidor 09</option><option value="10">Servidor 10</option></select></label>
-    <label id="gCodBox" hidden>Código de recuperação<input id="gCod" type="text" autocomplete="off" placeholder="XXXX-XXXX" style="text-transform:uppercase;font-family:var(--mono)"></label>
+    <button type="button" id="gMandarEmail" class="btn-copiar" hidden style="width:100%;background:var(--accent)">📧 Mandar código para o meu e-mail</button>
+    <label id="gCodBox" hidden>Código do e-mail ou código de recuperação<input id="gCod" type="text" autocomplete="off" placeholder="XXXX-XXXX" style="text-transform:uppercase;font-family:var(--mono)"></label>
     <label>Senha<input id="gSenha" type="password" autocomplete="current-password"></label>
     <label id="gSenha2Box" hidden>Repita a senha<input id="gSenha2" type="password" autocomplete="new-password"></label>
     <button type="button" id="gEntrar" class="btn-copiar" style="width:100%">Entrar</button>
@@ -507,7 +508,8 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <ol>
         <li>Na primeira vez, toque em <b>Criar conta</b>, preencha o seu <b>nome de ADM</b>, <b>e-mail</b>, <b>de qual servidor você é</b> e uma <b>senha</b> (mínimo 4 caracteres). O servidor já entra sozinho nos logs (ex.: @SERVIDOR 04) e dá para trocar depois ao lado do seu nome.</li>
         <li>Nas próximas vezes, é só <b>Entrar</b> com o nome e a senha. Para trocar de ADM, toque em <b>Sair</b> no topo.</li>
-        <li>Ao criar a conta, aparece um <b>código de recuperação</b> (ex.: <code>K7PQ-M2XZ</code>). Tire um print ou anote. Se esquecer a senha, toque em <b>Esqueci a senha</b>, digite o nome, o código e a senha nova. Depois disso, aparece um código novo para guardar.</li>
+        <li><b>Esqueceu a senha?</b> Toque em <b>Esqueci a senha</b>, digite o nome de ADM e toque em <b>📧 Mandar código para o meu e-mail</b>. Chega um código de 6 números no e-mail do cadastro (veja o spam também). Digite o código e a senha nova.</li>
+        <li>Ao criar a conta, aparece também um <b>código de recuperação</b> (ex.: <code>K7PQ-M2XZ</code>). Tire um print ou anote. Se esquecer a senha, toque em <b>Esqueci a senha</b>, digite o nome, o código e a senha nova. Depois disso, aparece um código novo para guardar.</li>
         <li>A conta fica guardada no celular. Cada ADM tem a sua e vê só os próprios logs salvos. Se trocar de celular, crie a conta de novo.</li>
       </ol>
 
@@ -997,6 +999,8 @@ function modoGate(m) {
   document.getElementById("gNivelBox").hidden = m !== "criar";
   document.getElementById("gEmailBox").hidden = m !== "criar";
   document.getElementById("gEsqueci").hidden = m !== "entrar";
+  document.getElementById("gMandarEmail").hidden = !(m === "recuperar" && emailOk());
+  document.getElementById("gMsg").style.color = "";
   document.getElementById("gEntrar").textContent = m === "criar" ? "Criar conta" : m === "recuperar" ? "Criar senha nova" : "Entrar";
   document.getElementById("gSenha").previousSibling.textContent = m === "recuperar" ? "Senha nova" : "Senha";
   document.getElementById("gSenha").autocomplete = m === "entrar" ? "current-password" : "new-password";
@@ -1005,6 +1009,29 @@ function modoGate(m) {
 }
 document.querySelectorAll("#gate .g-aba").forEach(b => b.addEventListener("click", () => modoGate(b.dataset.m)));
 document.getElementById("gEsqueci").addEventListener("click", () => modoGate("recuperar"));
+/* Recuperação por e-mail: manda um código de 6 números (vale 15 minutos) */
+const emailOk = () => typeof EMAILJS_PUBLIC_KEY !== "undefined" && EMAILJS_PUBLIC_KEY && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID;
+const esconderEmail = e => { const [u, d] = e.split("@"); return (u.slice(0, 2) + "***@" + d); };
+document.getElementById("gMandarEmail").addEventListener("click", async () => {
+  const msg = document.getElementById("gMsg"), b = document.getElementById("gMandarEmail");
+  const nome = document.getElementById("gNome").value.trim(), k = chaveP(nome), p = PERFIS[k];
+  msg.style.color = "";
+  if (!nome) { msg.textContent = "Digite o seu nome de ADM primeiro."; return; }
+  if (!p) { msg.textContent = "Conta não encontrada neste celular."; return; }
+  if (!p.email) { msg.textContent = "Essa conta não tem e-mail cadastrado. Use o código de recuperação."; return; }
+  const cod = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+  b.disabled = true; b.textContent = "Enviando...";
+  try {
+    const r = await fetch("https://api.emailjs.com/api/v1.0/email/send", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ service_id: EMAILJS_SERVICE_ID, template_id: EMAILJS_TEMPLATE_ID, user_id: EMAILJS_PUBLIC_KEY,
+        template_params: { to_email: p.email, to_name: p.nome, codigo: cod, app: "App ADM Rio Rise" } }) });
+    if (!r.ok) throw new Error(r.status);
+    p.recEmail = await hashCod("email|" + cod); p.recEmailAte = Date.now() + 15 * 60000; gravarJ("adm_perfis", PERFIS);
+    msg.style.color = "var(--teal)"; msg.textContent = `Código enviado para ${esconderEmail(p.email)}. Veja também o spam. Ele vale 15 minutos.`;
+    document.getElementById("gCod").focus();
+  } catch (_) { msg.textContent = "Não consegui mandar o e-mail agora. Tente de novo ou use o código de recuperação."; }
+  finally { b.disabled = false; b.textContent = "📧 Mandar código para o meu e-mail"; }
+});
 document.addEventListener("change", e => {
   if (e.target.id === "pServ" && ATUAL) { PERFIS[ATUAL].serv = e.target.value; gravarJ("adm_perfis", PERFIS); desenharPerfil(); }
   if (e.target.id === "pNivel" && ATUAL) { PERFIS[ATUAL].nivel = e.target.value; gravarJ("adm_perfis", PERFIS); desenharPerfil(); ultimaUnid = ""; montar(); puxarDoComando(true); atualizarLog(); }
@@ -1031,8 +1058,11 @@ async function gateEnviar() {
   }
   if (modo === "recuperar") {
     if (!p) return erro("Conta não encontrada neste celular.");
-    if (!p.rec) return erro("Essa conta não tem código de recuperação. Peça para a liderança ou crie outra conta com outro nome.");
-    if (await hashCod(document.getElementById("gCod").value) !== p.rec) return erro("Código de recuperação errado.");
+    const digitado = document.getElementById("gCod").value.trim();
+    const viaEmail = /^\d{6}$/.test(digitado) && p.recEmail && Date.now() < (p.recEmailAte || 0) && await hashCod("email|" + digitado) === p.recEmail;
+    const viaCodigo = p.rec && await hashCod(digitado) === p.rec;
+    if (!viaEmail && !viaCodigo) return erro(/^\d{6}$/.test(digitado) && p.recEmailAte && Date.now() > p.recEmailAte ? "Esse código do e-mail venceu. Peça outro." : "Código errado. Confira o e-mail ou o seu código de recuperação.");
+    delete p.recEmail; delete p.recEmailAte;
     if (s1 !== s2) return erro("As duas senhas não estão iguais.");
     const cod = gerarCodigo();
     p.pin = await hashPin(s1); p.rec = await hashCod(cod); gravarJ("adm_perfis", PERFIS);

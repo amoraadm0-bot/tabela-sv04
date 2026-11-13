@@ -9,3 +9,10 @@ const GOOGLE_CLIENT_ID = "";
 const CMD_BAN = "/ban [ID]";
 /* O que vai no lugar do tempo quando o ban é permanente (ex.: "0", "perm", "-1"). */
 const BAN_PERMANENTE = "perm";
+
+/* Recuperação de senha por e-mail (serviço gratuito EmailJS: emailjs.com).
+   Preencha os 3 campos abaixo depois de criar a conta no EmailJS.
+   Enquanto estiverem vazios, a recuperação funciona só pelo código de recuperação. */
+const EMAILJS_PUBLIC_KEY = "";
+const EMAILJS_SERVICE_ID = "";
+const EMAILJS_TEMPLATE_ID = "";
