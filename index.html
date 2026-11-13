@@ -1334,6 +1334,7 @@ function mostrar(v) {
   document.getElementById("vista-relatorio").hidden = v !== "relatorio";
   document.getElementById("vista-evidencia").hidden = v !== "evidencia";
   document.querySelectorAll("button.aba").forEach(a => a.setAttribute("aria-selected", a.dataset.v === v));
+  try { localStorage.setItem("adm_aba", v); localStorage.setItem("adm_rolagem", "0"); } catch (_) {}
 }
 document.querySelectorAll("button.aba").forEach(a => a.addEventListener("click", () => {
   mostrar(a.dataset.v); history.replaceState(null, "", a.dataset.v === "tabela" ? location.pathname : "#" + a.dataset.v);
@@ -1341,6 +1342,12 @@ document.querySelectorAll("button.aba").forEach(a => a.addEventListener("click",
 if (location.hash === "#manual") mostrar("manual");
 if (location.hash === "#relatorio") mostrar("relatorio");
 if (location.hash === "#evidencia") mostrar("evidencia");
+/* Se a janela fechar sem querer: volta na mesma aba e no mesmo ponto da tela */
+{ let y = 0; try { y = +localStorage.getItem("adm_rolagem") || 0; } catch (_) {}
+  if (!location.hash) { try { const ab = localStorage.getItem("adm_aba"); if (ab && ab !== "tabela" && document.getElementById("vista-" + ab)) mostrar(ab); } catch (_) {} }
+  if (y) { try { localStorage.setItem("adm_rolagem", String(y)); } catch (_) {} setTimeout(() => window.scrollTo(0, y), 120); } }
+let rolT = 0; window.addEventListener("scroll", () => { clearTimeout(rolT); rolT = setTimeout(() => { try { localStorage.setItem("adm_rolagem", String(Math.round(scrollY))); } catch (_) {} }, 250); }, { passive: true });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { try { guardarLog(); atualizarRel(); } catch (_) {} } });
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 document.getElementById("q").addEventListener("input", e => {
