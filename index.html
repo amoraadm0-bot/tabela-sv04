@@ -460,7 +460,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <button type="button" class="sug" data-chat-ex="id 18 vdm">id 18 vdm</button>
       <button type="button" class="sug" data-chat-ex="o que é rpfw">o que é rpfw</button>
       <button type="button" class="sug" data-chat-ex="o jogador saiu do jogo na ação">saiu do jogo na ação</button>
-      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button><button type="button" class="sug" data-chat-ex="bp">⏱️ bate-ponto</button>
+      <button type="button" class="sug" data-chat-ex="quero fazer relatório de turno">📝 relatório de turno</button><button type="button" class="sug" data-chat-ex="bp">⏱️ bate-ponto</button><button type="button" class="sug" data-chat-ex="soltar id 18">🔓 soltar id 18</button><button type="button" class="sug" data-chat-ex="tirar mute id 18">🔊 tirar mute id 18</button>
       <button type="button" class="sug" data-chat-ex="cr">cr (ver relatório)</button>
       <button type="button" class="sug" data-chat-ex="regras de família">regras de família</button>
       <button type="button" class="sug" data-chat-ex="regras das facções">regras das facções</button>
@@ -1202,6 +1202,32 @@ function comandoBP(resto) {
   atualizarBP();
   msgChat((r ? "✅ Pronto. " : "") + "Seu bate-ponto:" + cartaoBP() + "<p class='dica-log' style='margin-top:6px'>Ajustar: <i>bp 18 21</i> (horário) · <i>bp noite</i> · <i>bp lider eu</i> · <i>bp adms @Fulano @Ciclano</i></p>");
 }
+
+// 🔓 tirar punição: soltar da prisão / tirar mute
+function tirarPunicao(t) {
+  const n = normA(t);
+  let tipo = "";
+  if (/\b(unmuterep|unmutep)\b|(mute|mutado|silenciad\w*)\s+(do|de|no)\s+(\/)?report|report\s+(mutado|silenciado)/.test(n) && /\b(tir|remov|desmut|unmute|libera|solt)/.test(n)) tipo = "rep";
+  else if (/\b(unmute|desmut\w*|desmuta\w*)\b|\b(tira\w*|remov\w*|retir\w*|libera\w*|cancel\w*)\b.*\b(mute|mutad\w*|silenci\w*)/.test(n)) tipo = "mute";
+  else if (/\b(unjail|solt(?:ar|a|e)|desprend\w*|liberta\w*)\b|\b(tira\w*|remov\w*|retir\w*|libera\w*)\b.*\b(prisao|preso|presa|cadeia|jail|cela)\b|\b(sair|tirar)\s+da\s+(prisao|cadeia|cela)/.test(n)) tipo = "jail";
+  if (!tipo) return false;
+  const limpo = t.replace(/\b(unmuterep|unmutep|unmute|unjail|jail|mute|report)\b/gi, " ");
+  const mId = limpo.match(/(?:\bid\s*|#)(\d{1,6})\b/i) || limpo.match(/\b(\d{1,6})\b/);
+  const mNick = limpo.match(/\b([A-Za-zÀ-ÿ]+_[A-Za-zÀ-ÿ0-9_]+)\b/);
+  const alvo = mId ? mId[1] : mNick ? mNick[1] : "";
+  const info = {
+    jail: { cmd: "/unjail", nome: "Soltar da prisão", cor: "var(--violet)" },
+    mute: { cmd: "/unmute", nome: "Tirar o mute", cor: "var(--violet)" },
+    rep:  { cmd: "/unmuterep", nome: "Tirar o mute do /report", cor: "var(--violet)" },
+  }[tipo];
+  if (!alvo) { msgChat(`🔓 <b>${info.nome}</b>: me fala o ID ou o nick do jogador. Ex.: <i>${tipo === "jail" ? "soltar id 18" : tipo === "rep" ? "tirar mute do report id 18" : "tirar mute id 18"}</i>`); return true; }
+  const txt = `${info.cmd} ${alvo}`;
+  msgChat(`<div class="chat-card" style="--c:${info.cor}">
+    <div class="duv-top"><b>🔓 ${info.nome}</b><span>${mId ? "ID " : ""}${esc(alvo)}</span></div>
+    <div class="chat-cmd"><code>${esc(txt)}</code><button type="button" class="btn-copiar" data-copiar="${esc(txt)}">Copiar</button></div>
+    <p class="dica-log" style="margin:6px 0 0">Só tire a punição antes do tempo com autorização de um superior (ou se a punição foi aplicada errada).</p></div>`);
+  return true;
+}
 function responder(texto) {
   const t = texto.trim(); if (!t) return;
   msgChat(esc(t), "eu"); const n = normA(t);
@@ -1211,13 +1237,14 @@ function responder(texto) {
   const mBP = t.match(/^(?:bp|bate[\s-]?ponto|bater\s+(?:o\s+)?ponto|(?:quero\s+)?(?:fazer|montar)\s+(?:o\s+)?bate[\s-]?ponto)(?:\s+|:|$)(.*)$/i);
   if (mBP) { comandoBP(mBP[1] || ""); return; }
   if (REL.guiado) { respostaGuiada(t); return; }
+  if (tirarPunicao(t)) return;
   if (/^(quero\s+)?(fazer|montar|come[cç]ar|abrir)?\s*(o\s+|um\s+)?relat[oó]rio(\s+de\s+turno)?$/.test(n)) {
     REL.guiado = true; REL.passo = 0;
     msgChat("Vamos montar o relatório de turno! Vou perguntar campo por campo. Responda do seu jeito.<br><span class='dica-log'>Durante o jogo você também pode anotar a qualquer hora com <b>cr</b> + campo + texto (ex.: <i>cr hp sem médicos</i>), sem misturar com os comandos.</span>");
     perguntaRel(); return;
   }
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
-  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
+  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Soltar da prisão: <i>soltar id 18</i> · Tirar mute: <i>tirar mute id 18</i> · <i>tirar mute do report 18</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
   // regra pelo número: "regra 8.30", "artigo 4.22", "6.8 facção"
   const mNum = n.match(/\b(?:regra|artigo|art)?\s*(\d{1,2}\.\d{1,2})\b/);
   if (mNum && /(regra|artigo|art\b|^\d+\.\d+$|fac|famil|policia|hospital|exercito|midia|acao|invas)/.test(n)) {
