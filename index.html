@@ -223,9 +223,50 @@ tbody tr[data-k] .chip{border-color:var(--c)!important}
 .g-card{border-color:var(--teal)} .g-aba[aria-selected="true"]{border-bottom-color:var(--teal)}
 #gEntrar{background:var(--teal);color:#06231d}
 .man-body h3{color:var(--amber)}
+select.sel-escondido{display:none!important}
+.sel-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:10px 12px;font:14px var(--body);cursor:pointer;min-width:0}
+.sel-btn::after{content:"▾";color:var(--teal);flex:none}
+.sel-btn:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.campos .sel-btn{flex:1 1 220px}
+#sheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+#sheet[hidden]{display:none!important}
+.sh-box{width:min(560px,100%);max-height:85vh;background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.sh-top{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.sh-top b{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-voltar{font:600 15px var(--body);color:var(--fg);background:var(--teal-soft);border:1px solid var(--teal);border-radius:10px;padding:8px 14px;cursor:pointer;flex:none}
+.sh-busca{padding:10px 14px 0}
+.sh-busca input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:10px 12px;font:15px var(--body)}
+.sh-lista{overflow:auto;padding:8px 8px 14px;display:flex;flex-direction:column}
+.sh-grupo{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:12px 8px 4px}
+.sh-item{text-align:left;background:none;border:0;border-radius:10px;color:var(--fg);font:15px var(--body);padding:12px 10px;cursor:pointer}
+.sh-item:hover,.sh-item:focus-visible{background:var(--row);outline:none}
+.sh-item.atual{background:var(--teal-soft);border:1px solid var(--teal)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--row);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:10px 16px;font-size:14px;z-index:70}
+.toast[hidden]{display:none!important}
+.perfil-on .lg-linha{flex-wrap:wrap}
+.perfil-on{min-width:0}
+.perfil-on > span{min-width:0}
+.btn-compacto{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--teal);background:var(--teal-soft);font-size:22px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.btn-compacto[aria-pressed="true"]{background:var(--teal)}
+/* Modo janela: só o essencial, para usar em janela flutuante por cima do jogo */
+body.compacto header,body.compacto .abas a,body.compacto #comoInstalar{display:none!important}
+body.compacto .wrap{padding-block:6px 70px;gap:10px}
+body.compacto .montar{padding:10px;gap:8px}
+body.compacto .montar h2{font-size:15px}
+body.compacto .aba{padding:6px 8px;font-size:12px}
+body.compacto #montarLog .dica-log:first-of-type{display:none}
 </style>
 </head>
 <body>
+<div id="sheet" hidden>
+  <div class="sh-box" role="dialog" aria-modal="true" aria-labelledby="shTit">
+    <div class="sh-top"><button type="button" id="shVoltar" class="sh-voltar">← Voltar</button><b id="shTit"></b></div>
+    <div class="sh-busca"><input id="shBusca" type="search" placeholder="Buscar na lista..." autocomplete="off"></div>
+    <div id="shLista" class="sh-lista"></div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+<button type="button" id="btnCompacto" class="btn-compacto" aria-pressed="false" title="Modo janela flutuante">🪟</button>
 <div id="gate" hidden>
   <div class="g-card">
     <img src="icone-192.png" alt="" width="64" height="64" style="border-radius:14px">
@@ -308,9 +349,11 @@ tbody tr[data-k] .chip{border-color:var(--c)!important}
     <div class="resultado">
       <a id="relDc" class="btn-copiar" href="https://discord.com/channels/1286404288708477050/1397080126893854881" target="_blank" rel="noopener" style="text-decoration:none">📤 Copiar e abrir no Discord</a>
       <button type="button" class="mini" id="relCopiar">Só copiar</button>
+      <button type="button" class="btn-copiar" id="relSalvar" style="background:var(--violet-soft);border:1px solid var(--violet)">💾 Salvar relatório</button>
       <button type="button" class="mini" id="relNovo">Começar novo relatório</button>
     </div>
     <p class="dica-log" id="relAviso" hidden>Relatório copiado! No canal 📝 relatório-de-turno, toque e segure na caixa de mensagem → <b>Colar</b> e envie.</p>
+    <div id="relSalvos" class="salvos"></div>
   </section>
   </div>
 
@@ -360,6 +403,7 @@ tbody tr[data-k] .chip{border-color:var(--c)!important}
         <li>Abra a aba <b>📝 Relatório de turno</b> e vá preenchendo durante o turno. Fica salvo sozinho, mesmo se o app fechar.</li>
         <li>Em <b>Punições aplicadas</b>, toque em <b>↓ Puxar dos meus logs de hoje</b> para listar os logs que você salvou hoje.</li>
         <li>No fim, toque em <b>📤 Copiar e abrir no Discord</b>: abre o canal 📝 relatório-de-turno. Cole e envie.</li>
+        <li>Toque em <b>💾 Salvar relatório</b> para guardar. Em <b>Relatórios salvos</b> você vê, reabre para editar, envia ou apaga os relatórios antigos.</li>
         <li>Para o próximo turno, toque em <b>Começar novo relatório</b> (líder, ADMs e "comunicar" continuam preenchidos).</li>
       </ol>
 
@@ -389,6 +433,9 @@ tbody tr[data-k] .chip{border-color:var(--c)!important}
         <li><b>iPhone:</b> abra no Safari, toque em <b>Compartilhar</b> (quadrado com seta) → <b>Adicionar à Tela de Início</b>.</li>
         <li>O ícone <b>ADM Rio Rise</b> aparece junto com os outros apps e abre sem a barra do navegador. Funciona mesmo sem internet, com a última versão salva.</li>
       </ol>
+
+      <h3>Modo janela (🪟)</h3>
+      <p>Toque no botão redondo <b>🪟</b> no canto de baixo para deixar só o essencial na tela (Montar comando e evidência, sem título e com letras menores). Ideal para usar na <b>janela flutuante</b> por cima do jogo. Toque de novo para voltar ao normal. O app lembra a sua escolha.</p>
 
       <h3>Deixar o app numa barrinha dentro do jogo</h3>
       <p>Primeiro instale o app (<b>📲 Baixar app Rio Rise</b>). Depois siga o passo do seu celular:</p>
@@ -716,7 +763,7 @@ function desenharPerfil() {
     elPerfil.innerHTML = `<div class="perfil-on"><span>👤 <b>${esc(nome)}</b> · <select id="pServ" class="p-serv" aria-label="Seu servidor"><option value="">Servidor?</option>${optsSv}</select></span><span class="lg-linha"><button type="button" class="mini" id="pCod">${PERFIS[ATUAL].rec ? "Novo código de recuperação" : "⚠ Criar código de recuperação"}</button><button type="button" class="mini" id="pSair">Sair / trocar ADM</button></span></div>`;
     if (sv) { document.getElementById("lServ").value = "@SERVIDOR " + sv; atualizarLog(); }
     document.getElementById("quemTopo").innerHTML = `👤 ${esc(nome)}${sv ? " · S" + sv : ""} · <button type="button" class="link-sair" id="pSair2">Sair</button>`;
-    elSalvos.hidden = false; desenharSalvos();
+    elSalvos.hidden = false; desenharSalvos(); if (typeof desenharRelSalvos === "function") desenharRelSalvos();
     const ap = document.getElementById("lAplicador"); if (!ap.value) { ap.value = nome; atualizarLog(); }
     return;
   }
@@ -1013,6 +1060,112 @@ document.getElementById("relNovo").addEventListener("click", () => {
   R_IDS.filter(id => !R_FICA.includes(id)).forEach(id => document.getElementById(id).value = "");
   document.getElementById("rData").value = hoje(); atualizarRel();
 });
+/* ---------- Relatórios salvos (por ADM, neste celular) ---------- */
+function desenharRelSalvos() {
+  const box = document.getElementById("relSalvos");
+  if (!ATUAL) { box.innerHTML = '<p class="dica-log">Entre com a sua conta para ver os relatórios salvos.</p>'; return; }
+  const lista = PERFIS[ATUAL].relatorios || [];
+  const hora = t => new Date(t).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  box.innerHTML = `<h3 class="salvos-tit">Relatórios salvos <span class="badge">${lista.length}</span></h3>` + (lista.length ? lista.map(r => `
+    <div class="salvo${r.enviado ? " enviado" : ""}" data-rid="${r.id}">
+      <div class="salvo-top"><b>Turno ${esc(r.data || "")}</b><span>${hora(r.quando)}</span></div>
+      <div class="dica-log">Líder: ${esc(r.lider || "—")}${r.enviado ? " · ✓ enviado" : ""}</div>
+      <details><summary>Ver texto</summary><pre>${esc(r.texto)}</pre></details>
+      <div class="resultado">
+        <a class="btn-copiar" data-r="dc" href="https://discord.com/channels/1286404288708477050/1397080126893854881" target="_blank" rel="noopener" style="text-decoration:none;padding:9px 14px;font-size:14px">📤 Copiar e abrir no Discord</a>
+        <button type="button" class="mini" data-r="abrir">✏️ Abrir para editar</button>
+        <button type="button" class="mini perigo-mini" data-r="del">Apagar</button>
+      </div></div>`).join("") : '<p class="dica-log">Nenhum relatório salvo ainda. Preencha acima e toque em 💾 Salvar relatório.</p>');
+}
+document.getElementById("relSalvar").addEventListener("click", () => {
+  const b = document.getElementById("relSalvar");
+  if (!ATUAL) { desenharPerfil(); return; }
+  const campos = {}; R_IDS.forEach(id => campos[id] = document.getElementById(id).value);
+  const lista = PERFIS[ATUAL].relatorios = PERFIS[ATUAL].relatorios || [];
+  lista.unshift({ id: Date.now(), quando: Date.now(), data: rv("rData"), lider: rv("rLider"), texto: document.getElementById("relPronto").value, campos, enviado: false });
+  gravarJ("adm_perfis", PERFIS); desenharRelSalvos();
+  b.textContent = "Salvo! ✓"; setTimeout(() => b.textContent = "💾 Salvar relatório", 1200);
+});
+let apagarRelPend = null;
+document.getElementById("relSalvos").addEventListener("click", e => {
+  const b = e.target.closest("[data-r]"); if (!b || !ATUAL) return;
+  const card = b.closest(".salvo"), lista = PERFIS[ATUAL].relatorios || [], r = lista.find(x => String(x.id) === card.dataset.rid);
+  if (!r) return;
+  if (b.dataset.r === "dc") { try { navigator.clipboard.writeText(r.texto).catch(() => {}); } catch (_) {} r.enviado = true; gravarJ("adm_perfis", PERFIS); setTimeout(desenharRelSalvos, 300); }
+  else if (b.dataset.r === "abrir") { R_IDS.forEach(id => document.getElementById(id).value = (r.campos || {})[id] || ""); atualizarRel(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  else if (b.dataset.r === "del") {
+    if (apagarRelPend !== b) { apagarRelPend = b; b.textContent = "Confirmar?"; setTimeout(() => { if (apagarRelPend === b) { apagarRelPend = null; b.textContent = "Apagar"; } }, 3000); return; }
+    PERFIS[ATUAL].relatorios = lista.filter(x => x !== r); gravarJ("adm_perfis", PERFIS); desenharRelSalvos();
+  }
+});
+
+/* ---------- Listas de escolha com seta de voltar (no lugar da lista do celular) ---------- */
+const sheet = document.getElementById("sheet"), shLista = document.getElementById("shLista"), shBusca = document.getElementById("shBusca");
+let selAberto = null, ignorarPop = false;
+function rotuloSel(s) { const o = s.options[s.selectedIndex]; return o ? o.text : ""; }
+function prepararSelect(s) {
+  if (s.dataset.sheet) return; s.dataset.sheet = "1";
+  const b = document.createElement("button"); b.type = "button"; b.className = "sel-btn"; b.textContent = rotuloSel(s);
+  b.setAttribute("aria-label", s.getAttribute("aria-label") || (s.closest("label") ? s.closest("label").firstChild.textContent.trim() : "Escolher"));
+  s.after(b); s.classList.add("sel-escondido");
+  b.addEventListener("click", () => abrirSheet(s));
+}
+function abrirSheet(s) {
+  selAberto = s;
+  const lab = s.closest("label"); document.getElementById("shTit").textContent = s.getAttribute("aria-label") || (lab ? lab.firstChild.textContent.trim() : "Escolher");
+  let html = "";
+  [...s.children].forEach(el => {
+    if (el.tagName === "OPTGROUP") { html += `<div class="sh-grupo">${esc(el.label)}</div>`; [...el.children].forEach(o => html += itemSheet(o, s)); }
+    else html += itemSheet(el, s);
+  });
+  shLista.innerHTML = html; shBusca.value = ""; shBusca.parentElement.hidden = s.options.length < 12;
+  sheet.hidden = false; document.body.classList.add("travado");
+  history.pushState({ sheet: 1 }, "");
+  const at = shLista.querySelector(".sh-item.atual"); if (at) at.scrollIntoView({ block: "center" });
+}
+const itemSheet = (o, s) => o.value === "" && o.index === 0 && s.id !== "lModelo" ? "" : `<button type="button" class="sh-item${o.selected ? " atual" : ""}" data-v="${esc(o.value)}">${esc(o.text)}</button>`;
+function fecharSheet(viaVoltar) {
+  if (sheet.hidden) return false;
+  sheet.hidden = true; document.body.classList.remove("travado"); selAberto = null;
+  if (!viaVoltar && history.state && history.state.sheet) { ignorarPop = true; history.back(); }
+  return true;
+}
+document.getElementById("shVoltar").addEventListener("click", () => fecharSheet(false));
+sheet.addEventListener("click", e => { if (e.target === sheet) fecharSheet(false); });
+shLista.addEventListener("click", e => {
+  const it = e.target.closest(".sh-item"); if (!it || !selAberto) return;
+  const s = selAberto; s.value = it.dataset.v; fecharSheet(false);
+  s.dispatchEvent(new Event("change", { bubbles: true })); s.dispatchEvent(new Event("input", { bubbles: true }));
+});
+shBusca.addEventListener("input", () => {
+  const q = norm(shBusca.value.trim());
+  shLista.querySelectorAll(".sh-item").forEach(b => b.hidden = q && !norm(b.textContent).includes(q));
+});
+function prepararTodos() { document.querySelectorAll("select:not([data-sheet])").forEach(prepararSelect); }
+setInterval(() => {   // mantém o texto dos botões igual ao valor escolhido
+  prepararTodos();
+  document.querySelectorAll("select[data-sheet]").forEach(s => { const b = s.nextElementSibling; if (b && b.classList.contains("sel-btn")) { const t = rotuloSel(s); if (b.textContent !== t) b.textContent = t; } });
+}, 300);
+prepararTodos();
+
+/* ---------- Botão voltar do celular: fecha listas e volta abas antes de sair do app ---------- */
+/* Modo janela flutuante (fica lembrado) */
+const btnComp = document.getElementById("btnCompacto");
+function modoCompacto(on) { document.body.classList.toggle("compacto", on); btnComp.setAttribute("aria-pressed", on); btnComp.title = on ? "Sair do modo janela" : "Modo janela flutuante"; try { localStorage.setItem("adm_compacto", on ? "1" : ""); } catch (_) {} }
+btnComp.addEventListener("click", () => { const on = !document.body.classList.contains("compacto"); modoCompacto(on); const t = document.getElementById("toast"); t.textContent = on ? "Modo janela ligado: só o essencial na tela" : "Modo janela desligado"; t.hidden = false; setTimeout(() => t.hidden = true, 1800); });
+try { if (localStorage.getItem("adm_compacto")) modoCompacto(true); } catch (_) {}
+let avisoSair = 0;
+history.replaceState({ base: 1 }, ""); history.pushState({ guarda: 1 }, "");
+window.addEventListener("popstate", () => {
+  if (ignorarPop) { ignorarPop = false; return; }
+  if (fecharSheet(true)) return;
+  const abaAtual = document.querySelector("button.aba[aria-selected='true']");
+  if (abaAtual && abaAtual.dataset.v !== "tabela") { mostrar("tabela"); history.pushState({ guarda: 1 }, ""); return; }
+  if (Date.now() - avisoSair < 2000) { history.back(); return; }
+  avisoSair = Date.now(); history.pushState({ guarda: 1 }, "");
+  const t = document.getElementById("toast"); t.textContent = "Toque em voltar de novo para sair"; t.hidden = false; setTimeout(() => t.hidden = true, 2000);
+});
+
 (function () {
   let o = {}; try { o = JSON.parse(localStorage.getItem("adm_relatorio") || "{}"); } catch (_) {}
   R_IDS.forEach(id => { if (o[id]) document.getElementById(id).value = o[id]; });
