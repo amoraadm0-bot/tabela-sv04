@@ -436,7 +436,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <div class="resultado"><button type="button" class="mini" id="gCodCopiar">📋 Copiar código</button><button type="button" class="btn-copiar" id="gCodOk">Já guardei, continuar</button></div>
     </div>
     <p id="gMsg" class="g-msg" aria-live="polite"></p>
-    <button type="button" id="instalarGate" class="btn-gate-inst">📲 Baixar app Rio Rise</button>
+    <button type="button" id="instalarGate" class="btn-gate-inst">📲 Baixar app ADM</button>
     <div id="comoInstalarGate" class="note" hidden style="margin:0"></div>
     <p class="dica-log">A conta fica guardada neste celular. Cada ADM cria a sua e vê só os próprios logs e relatórios.</p>
   </div>
@@ -448,7 +448,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <p>Punições e comandos · Admin Level 1 · toque no comando para copiar</p>
     </div>
     <span id="quemTopo"></span>
-    <button type="button" id="instalar">📲 Baixar app Rio Rise</button>
+    <button type="button" id="instalar">📲 Baixar app ADM</button>
   </header>
   <div id="comoInstalar" class="note" hidden></div>
 
@@ -695,7 +695,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <p>Toque no botão <b>🫧</b> (acima do 🪟) ou faça uma <b>pinça</b> leve na tela (dois dedos se aproximando um pouco): o app vira uma <b>bolha transparente</b> escrito ADM. Arraste a bolha para onde quiser e <b>toque nela</b> para o app voltar do jeito que estava.</p>
 
       <h3>Deixar o app numa barrinha dentro do jogo</h3>
-      <p>Primeiro instale o app (<b>📲 Baixar app Rio Rise</b>). Depois siga o passo do seu celular:</p>
+      <p>Primeiro instale o app (<b>📲 Baixar app ADM</b>). Depois siga o passo do seu celular:</p>
       <ul>
         <li><b>Samsung:</b> abra o jogo e puxe a barra de navegação para cima (ou toque no ícone 🎮 no canto) para abrir o <b>Game Booster</b>. Toque em <b>Apps em janela pop-up</b> → <b>+</b> → escolha <b>ADM Rio Rise</b>. Depois é só abrir pelo Game Booster durante o jogo. Também dá para pôr no <b>Painel Edge</b> (Configurações → Tela → Painéis Edge).</li>
         <li><b>Xiaomi / Redmi / Poco:</b> abra o <b>Segurança</b> → <b>Game Turbo</b> e adicione o jogo. No jogo, deslize da borda de cima para dentro para abrir a barra do Game Turbo → <b>Janelas flutuantes</b> → <b>+</b> → <b>ADM Rio Rise</b>. Fora de jogos, use a <b>Barra lateral</b> (Configurações → Recursos especiais → Barra lateral).</li>
@@ -2104,7 +2104,7 @@ async function instalarApp(btn, caixa) {
   caixa.innerHTML = ios
     ? "<b>Para baixar no iPhone:</b> abra este site no <b>Safari</b>, toque em <b>Compartilhar</b> (quadrado com seta para cima) e depois em <b>Adicionar à Tela de Início</b>."
     : android
-    ? "<b>Para baixar no Android:</b> abra este site no <b>Chrome</b>, toque nos <b>3 pontinhos ⋮</b> no canto de cima e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>. Se já tiver instalado, procure o ícone <b>ADM Rio Rise</b> nos seus apps."
+    ? "<b>Para baixar no Android:</b> abra este site no <b>Chrome</b>, toque nos <b>3 pontinhos ⋮</b> no canto de cima e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>. Se já tiver instalado, procure o ícone <b>ADM</b> nos seus apps."
     : "<b>Para baixar no computador:</b> no Chrome, clique no ícone de instalar (tela com seta) no fim da barra de endereço, ou nos <b>3 pontinhos ⋮</b> → <b>Transmitir, salvar e compartilhar</b> → <b>Instalar página como app</b>.";
   caixa.hidden = !caixa.hidden;
 }
