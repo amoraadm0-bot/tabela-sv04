@@ -625,7 +625,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
         <li><b>Tempo:</b> escolha a unidade tocando em <b>min</b>, <b>dias</b> ou <b>permanente</b>, e use os atalhos <b>1ª · 2ª · 3ª</b> que vêm da tabela (ex.: VDM → 60 min · 1 a 5 dias). Prisão e mute vêm em min; banimento vem em dias. Em <b>dias</b> ou <b>permanente</b> o comando vira <b>ban</b> — só para ADM <b>nível 2</b> em diante (escolha o seu nível no cadastro ou ao lado do seu nome). No nível 1 aparece "peça a um superior".</li>
         <li><b>🤖 Assistente:</b> na aba Assistente, converse como num chat. Ex.: <code>id 18 vdm</code> → ele mostra o significado, a explicação, a punição, os tempos (1ª, 2ª vez) e o comando pronto para copiar. Também responde <code>o que é rpfw</code> ou "o que faço se o jogador saiu do jogo na ação". Depois de montar, escreva <code>2ª vez</code> para a reincidência.</li>
         <li><b>📝 Relatório pelo Assistente:</b> escreva <code>quero fazer relatório de turno</code> e responda campo por campo (<i>pular</i>, <i>voltar</i>, <i>parar</i>). Durante o jogo, anote a qualquer hora com <b>cr</b> (continua relatório) + campo + texto: <code>cr hp sem médicos</code>, <code>cr roxos dinheiro 2000</code>, <code>cr obs denúncia de hack</code>. Sem o nome do campo vai para Observação. <code>cr</code> sozinho mostra o relatório; <code>cr novo</code> começa outro. Fica tudo junto com a aba Relatório.</li>
-        <li><b>⚡ Rápido:</b> digite a sigla e o ID juntos, ex.: <code>dm 123</code> ou <code>vdm Joao_Silva</code>. O comando já sai pronto para copiar.</li>
+        <li><b>⚡ Rápido:</b> digite a sigla, o ID e o nome, ex.: <code>dm 123 Joao_Silva</code>. O comando sai só com o ID (<code>/jail 123 …</code>) e o nome vai para a evidência.</li>
         <li><b>❓ Tirar dúvida:</b> logo abaixo do Montar comando, conte o que o jogador fez (ex.: "saiu do jogo quando ia ser preso"). O app mostra as regras que cabem, com explicação, punição e um botão para usar no comando.</li>
         <li>Escreva <b>o que aconteceu</b> (ex.: <code>atropelou de propósito</code>, <code>cortou caminho pela grama</code>, <code>xingou a mãe</code>). O site escolhe a infração sozinho e mostra outras sugestões para tocar, se a primeira não for a certa.</li>
         <li>Ou escolha a <b>infração</b> direto na lista, manualmente.</li>
@@ -714,8 +714,9 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   <section class="montar" aria-labelledby="montarTit">
     <h2 id="montarTit">Montar comando</h2>
     <div class="campos">
-      <div class="rapido-box"><span class="tempo-lab">⚡ Rápido: sigla + ID (ex.: <code>dm 123</code>, <code>vdm Joao_Silva</code>, <code>retirar mute id 34</code>, <code>soltar id 34</code>)</span><input id="rapido" type="text" placeholder="dm 123" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-      <input id="jogador" type="text" placeholder="Nick ou ID do jogador" aria-label="Nick ou ID do jogador" autocomplete="off">
+      <div class="rapido-box"><span class="tempo-lab">⚡ Rápido: sigla + ID + nome (ex.: <code>dm 123 Joao_Silva</code>, <code>vdm 45</code>, <code>retirar mute id 34</code>, <code>soltar id 34</code>)</span><input id="rapido" type="text" placeholder="dm 123" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <input id="jogador" type="text" inputmode="text" placeholder="ID do jogador (vai no comando)" aria-label="ID do jogador" autocomplete="off">
+      <input id="nickJog" type="text" placeholder="Nome / nick (vai só na evidência)" aria-label="Nome do jogador para a evidência" autocomplete="off" autocapitalize="off" spellcheck="false">
       <input id="aconteceu" type="text" placeholder="O que aconteceu? (ex.: atropelou de propósito)" aria-label="O que aconteceu" autocomplete="off">
     </div>
     <div id="sugestoes" class="sugestoes" hidden></div>
@@ -868,6 +869,7 @@ selInf.innerHTML = '<option value="">Escolha a infração...</option>' + SECOES.
   const ops = s.linhas.map(r => { LISTA.push(r); SECAO_DE.set(r, s.id); return `<option value="${LISTA.length - 1}">${esc(r.infracao)} · ${esc(r.codigo)} · ${esc(r.punicao)}</option>`; }).join("");
   return ops ? `<optgroup label="${esc(s.titulo)}">${ops}</optgroup>` : "";
 }).join("");
+const nickJog = document.getElementById("nickJog");
 const jogador = document.getElementById("jogador"), pronto = document.getElementById("cmdPronto"), copiar = document.getElementById("copiarPronto");
 function montar() {
   const r = LISTA[selInf.value], n = jogador.value.trim();
@@ -947,7 +949,9 @@ document.getElementById("rapido").addEventListener("input", e => {
   let iInf = -1, resto = [];
   partes.forEach(p => { const i = iInf < 0 ? acharSigla(p) : -1; if (i >= 0) iInf = i; else resto.push(p); });
   if (iInf < 0) return;
-  selInf.value = String(iInf); jogador.value = resto.join(" ");
+  const nk = resto.find(p => /_/.test(p) && !/^\d+$/.test(p)), idr = resto.find(p => /^#?\d{1,6}$/.test(p));
+  selInf.value = String(iInf);
+  if (idr) { jogador.value = idr.replace("#", ""); nickJog.value = nk || ""; } else { jogador.value = resto.join(" "); nickJog.value = ""; }
   ajustarTempo(); marcarSug(); montar();
   setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0);
 });
@@ -991,7 +995,7 @@ document.getElementById("duvLimpar").addEventListener("click", () => { document.
 
 /* ---------- 🤖 Assistente (chat): entende "id 18 vdm" e responde ---------- */
 const chatLista = document.getElementById("chatLista"), chatIn = document.getElementById("chatIn");
-const CTX = { id: "", inf: -1 };
+const CTX = { id: "", nick: "", inf: -1 };
 function lev(a, b) { const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9; const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
 const SIGLAS = () => LISTA.map((r, i) => ({ i, s: normA(curto(r.infracao)) })).filter(x => !/\s/.test(x.s));
 function siglaAproximada(tok) {
@@ -1316,7 +1320,7 @@ function responder(texto) {
     perguntaRel(); return;
   }
   if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|e ai)\b/.test(n) && n.split(/\s+/).length <= 3) { msgChat("Oi! Me manda o que aconteceu ou a sigla e o ID. Ex.: <i>id 18 vdm</i>, <i>dm 123</i> ou <i>o jogador saiu do jogo na ação</i>."); return; }
-  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · <i>dm Joao_Silva</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Solicitar banimento: <i>solicitar ban Joao_Silva ina 5 dias obs …</i><br>• Soltar da prisão: <i>soltar id 18</i> · Tirar mute: <i>tirar mute id 18</i> · <i>tirar mute do report 18</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
+  if (/^(ajuda|help|como funciona|\?)$/.test(n)) { msgChat("Posso:<br>• Montar comando: <i>id 18 vdm</i> · com nome para a evidência: <i>id 18 Joao_Silva vdm</i><br>• Explicar uma sigla: <i>o que é rpfw</i><br>• Dizer o que aplicar: <i>matou o cara que matou ele antes</i><br>• Reincidência: depois de montar, escreva <i>2ª vez</i><br>• Solicitar banimento: <i>solicitar ban Joao_Silva ina 5 dias obs …</i><br>• Soltar da prisão: <i>soltar id 18</i> · Tirar mute: <i>tirar mute id 18</i> · <i>tirar mute do report 18</i><br>• Bate-ponto ao sair do turno: <i>bp</i> · <i>bp 18 21</i><br>• Relatório de turno: <i>quero fazer relatório de turno</i> · durante o jogo: <i>cr hp fechado</i>, <i>cr roxos dinheiro 2000</i>, <i>cr obs …</i> · ver: <i>cr</i><br>• Ver uma regra: <i>regra 8.30</i> · <i>regras de família</i> · <i>regras da polícia</i> · <i>pode sequestrar trabalhador?</i>"); return; }
   // regra pelo número: "regra 8.30", "artigo 4.22", "6.8 facção"
   const mNum = n.match(/\b(?:regra|artigo|art)?\s*(\d{1,2}\.\d{1,2})\b/);
   if (mNum && /(regra|artigo|art\b|^\d+\.\d+$|fac|famil|policia|hospital|exercito|midia|acao|invas)/.test(n)) {
@@ -1348,9 +1352,13 @@ function responder(texto) {
     const colado = w.match(/^(?:id|#)[:#]?(\w+)$/i);
     if (colado && !id && (/^#/.test(w) || /\d/.test(colado[1]))) { id = colado[1]; usados.add(k); }
     else if ((wn === "id" || wn === "id:" || wn === "nick") && toksT[k + 1]) { id = toksT[k + 1]; usados.add(k); usados.add(k + 1); }
-    else if (!id && /^\d{1,6}$/.test(w) && !/^\d+\.\d+$/.test(w)) { id = w; usados.add(k); }
+    else if ((!id || !/^\d+$/.test(id)) && /^\d{1,6}$/.test(w) && !/^\d+\.\d+$/.test(w)) { id = w; usados.add(k); }
     else if (!id && /^[A-Za-z0-9]+_[A-Za-z0-9_]+$/.test(w)) { id = w; usados.add(k); }
   });
+  // ID (número) vai no comando; nick (Nome_Sobrenome) vai só na evidência
+  const nickT = toksT.find((w, k) => /^[A-Za-zÀ-ÿ0-9]+_[A-Za-zÀ-ÿ0-9_]+$/.test(w) && !/^\d+$/.test(w));
+  if (nickT && id && id !== nickT) { toksT.forEach((w, k) => { if (w === nickT) usados.add(k); }); CTX.nick = nickT; }
+  else if (id) CTX.nick = "";
   if (id) CTX.id = id;
   // reincidência
   const reinc = n.match(/\b([123])\s*(?:a|ª|º)?\s*vez\b/) || (/\breincid/.test(n) ? ["", "2"] : null);
@@ -1361,7 +1369,7 @@ function responder(texto) {
   if (inf < 0 && id && CTX.inf >= 0 && toksT.length <= 2) { msgChat(cartaoInfracao(CTX.inf, CTX.id, 0)); return; }
   if (inf >= 0) {
     CTX.inf = inf;
-    const intro = perguntaSignif ? "Aqui está:" : CTX.id ? `Entendi: jogador <b>${esc(CTX.id)}</b>, ${esc(curto(LISTA[inf].infracao))}.` : `Entendi: ${esc(curto(LISTA[inf].infracao))}.`;
+    const intro = perguntaSignif ? "Aqui está:" : CTX.id ? `Entendi: jogador <b>${esc(CTX.id)}</b>${CTX.nick ? ` (nome na evidência: <b>${esc(CTX.nick)}</b>)` : ""}, ${esc(curto(LISTA[inf].infracao))}.` : `Entendi: ${esc(curto(LISTA[inf].infracao))}.`;
     const rc = perguntaSignif ? regraPorCodigo(LISTA[inf].codigo) : null;
     msgChat(intro + cartaoInfracao(inf, CTX.id, reinc ? (+reinc[1]) - 1 : 0) + (rc ? "<p class='dica-log' style='margin-top:8px'>📜 Regra completa no Discord:</p>" + cartaoRegra(rc) : "")); return;
   }
@@ -1407,7 +1415,7 @@ chatLista.addEventListener("click", e => {
   const ev = e.target.closest("[data-chat-evid]");
   if (ev) {
     const i = +ev.dataset.chatEvid, o = opcoesTempo(LISTA[i])[+ev.dataset.op];
-    selInf.value = String(i); jogador.value = CTX.id; infTempo = ""; ajustarTempo();
+    selInf.value = String(i); jogador.value = CTX.id; nickJog.value = CTX.nick || ""; infTempo = ""; ajustarTempo();
     if (o) { marcarUnid(o.u); document.getElementById("tempoCmd").value = o.n; }
     marcarSug(); montar(); ultimaInf = ""; puxarDoComando(true); atualizarLog();
     mostrar("evidencia"); history.replaceState(history.state, "", "#evidencia"); window.scrollTo(0, 0);
@@ -1460,7 +1468,7 @@ function textoLog() {
 }
 const LOG_IDS = ["lModelo", "lNomes", "lTempo", "lMotivo", "lRegra", "lObs", "lServ", "lData", "lEvid", "lInformar", "lAplicador", "lPunicao", "lRemocao"];
 const LEMBRAR = ["lModelo", "lServ", "lInformar", "lAplicador"];   // ficam salvos para a próxima vez
-function guardarLog() { try { const o = {}; LOG_IDS.forEach(id => o[id] = document.getElementById(id).value); o.jogador = jogador.value; localStorage.setItem("adm_log", JSON.stringify(o)); } catch (_) {} }
+function guardarLog() { try { const o = {}; LOG_IDS.forEach(id => o[id] = document.getElementById(id).value); o.jogador = jogador.value; o.nick = nickJog.value; localStorage.setItem("adm_log", JSON.stringify(o)); } catch (_) {} }
 function atualizarLog() {
   const m = MODELOS[v("lModelo")], mostrar = new Set(CAMPOS_MOD[m.tipo]);
   document.querySelectorAll("#logCampos [data-campo]").forEach(l => l.hidden = !mostrar.has(l.dataset.campo));
@@ -1483,7 +1491,7 @@ document.getElementById("logCampos").addEventListener("change", () => { puxarDoC
 document.getElementById("lHoje").addEventListener("click", () => { document.getElementById("lData").value = hoje(); atualizarLog(); });
 /* Limpar campos: comando + evidência (e o relatório quando sai da conta) */
 function limparCampos(saindo) {
-  ["rapido", "jogador", "aconteceu", "tempoCmd"].forEach(id => document.getElementById(id).value = "");
+  ["rapido", "jogador", "nickJog", "aconteceu", "tempoCmd"].forEach(id => document.getElementById(id).value = "");
   selInf.value = ""; infTempo = ""; ultimaInf = ""; ultimaUnid = ""; marcarUnid("min"); desenharAtalhos(null);
   const sb = document.getElementById("sugestoes"); sb.hidden = true; sb.innerHTML = "";
   montar();
@@ -1528,7 +1536,7 @@ function puxarDoComando(forcar) {
     if (atual !== "removida") { document.getElementById("lModelo").value = novo; selCanal.value = MODELOS[novo].canal; linkCanal(); }
   }
   const r = LISTA[selInf.value], m = MODELOS[v("lModelo")];
-  if (jogador.value.trim()) document.getElementById("lNomes").value = jogador.value.trim();
+  const nomeEv = nickJog.value.trim() || jogador.value.trim(); if (nomeEv) document.getElementById("lNomes").value = nomeEv;
   if (!r) return;
   document.getElementById("lMotivo").value = curto(r.infracao);
   document.getElementById("lRegra").value = r.codigo;
@@ -1538,7 +1546,7 @@ function puxarDoComando(forcar) {
   const tc = document.getElementById("tempoCmd").value.trim();
   document.getElementById("lTempo").value = UNID === "perm" ? "Permanente" : tc ? (UNID === "dias" ? tc + " Dias" : tc) : t.replace(/^ban\s*/i, "");
 }
-["input", "change"].forEach(ev => [jogador, selInf, document.getElementById("aconteceu")].forEach(el => el.addEventListener(ev, () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0))));
+["input", "change"].forEach(ev => [jogador, nickJog, selInf, document.getElementById("aconteceu")].forEach(el => el.addEventListener(ev, () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0))));
 sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atualizarLog(); }, 0));
 // Recupera o que estava preenchido (se fechar o app sem querer)
 (function () {
@@ -1548,6 +1556,7 @@ sugBox.addEventListener("click", () => setTimeout(() => { puxarDoComando(); atua
   if (!document.getElementById("lServ").value) document.getElementById("lServ").value = "@SERVIDOR 04";
   if (!document.getElementById("lData").value) document.getElementById("lData").value = hoje();
   if (o.jogador) { jogador.value = o.jogador; montar(); }
+  if (o.nick) nickJog.value = o.nick;
   selCanal.value = MODELOS[v("lModelo")].canal; linkCanal();
   atualizarLog();
 })();
