@@ -897,15 +897,16 @@ document.getElementById("rapido").addEventListener("input", e => {
 });
 
 /* ❓ Tirar dúvida: mostra as regras que mais combinam, com explicação */
+function parecida(t, conj) { if (t.length < 5) return false; for (const w of conj) if (w.length >= 4 && Math.abs(w.length - t.length) <= 2 && lev(t, w) <= 1) return true; return false; }
 function rankDuvida(texto) {
-  const q = toks(texto); if (!q.length) return [];
+  const q = toks(texto).filter(w => !/^\d+$/.test(w)); if (!q.length) return [];
   const vistos = new Set();
   return LISTA.map((r, i) => {
     const sig = curto(r.infracao), alvo = ALVOS[i];
     const exp = EXPL[r.infracao] || EXPL[sig] || "";
     const ex = new Set(toks(exp).map(raiz));
     let pts = 0;
-    q.forEach(t => { if (t === alvo.sigla) pts += 4; else if (alvo.raizes.has(raiz(t))) pts += 2; else if (ex.has(raiz(t))) pts += 1; });
+    q.forEach(t => { if (t === alvo.sigla) pts += 4; else if (alvo.raizes.has(raiz(t))) pts += 2; else if (ex.has(raiz(t))) pts += 1; else if (parecida(t, alvo.palavras)) pts += 2; });
     return { i, r, sig, exp, pts };
   }).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts || a.i - b.i)
     .filter(x => { const k = x.sig + "|" + SECAO_DE.get(x.r); if (vistos.has(k)) return false; vistos.add(k); return true; }).slice(0, 4);
@@ -913,7 +914,7 @@ function rankDuvida(texto) {
 function mostrarDuvida() {
   const txt = document.getElementById("duvTexto").value, box = document.getElementById("duvRes");
   const res = rankDuvida(txt);
-  const q = new Set(toks(txt).map(raiz));
+  const q = new Set(toks(txt).filter(w => !/^\d+$/.test(w)).map(raiz));
   const extras = OUTRAS.filter(o => toks(o.palavras + " " + o.titulo).some(w => q.has(raiz(w))));
   if (!res.length && !extras.length) { box.innerHTML = '<p class="dica-log">Não achei uma regra que combine. Tente explicar de outro jeito (ex.: "atirou sem motivo", "saiu do jogo na ação") ou consulte a liderança.</p>'; return; }
   const nomeSec = r => (SECOES.find(s => s.id === SECAO_DE.get(r)) || {}).titulo || "";
@@ -940,6 +941,8 @@ const SIGLAS = () => LISTA.map((r, i) => ({ i, s: normA(curto(r.infracao)) })).f
 function siglaAproximada(tok) {
   const t = normA(tok); if (t.length < 2 || /^\d+$/.test(t)) return -1;
   const exata = acharSigla(tok); if (exata >= 0) return exata;
+  const primeira = LISTA.map((r, i) => ({ i, w: normA(curto(r.infracao)).split(/\s+/) })).filter(x => x.w.length > 1 && x.w[0] === t && t.length >= 4);
+  if (primeira.length) return primeira[0].i;   // ex.: "flood" → Flood no chat, "caps" → Caps Lock
   if (t.length < 3) return -1;
   let melhor = -1, dist = 9; SIGLAS().forEach(x => { const d = lev(t, x.s); if (d < dist) { dist = d; melhor = x.i; } });
   return dist <= 1 ? melhor : -1;
@@ -981,7 +984,9 @@ function responder(texto) {
   const toksT = t.split(/\s+/); let id = "", usados = new Set();
   toksT.forEach((w, k) => {
     const wn = normA(w);
-    if ((wn === "id" || wn === "nick") && toksT[k + 1]) { id = toksT[k + 1]; usados.add(k); usados.add(k + 1); }
+    const colado = w.match(/^(?:id|#)[:#]?(\w+)$/i);
+    if (colado && !id && (/^#/.test(w) || /\d/.test(colado[1]))) { id = colado[1]; usados.add(k); }
+    else if ((wn === "id" || wn === "id:" || wn === "nick") && toksT[k + 1]) { id = toksT[k + 1]; usados.add(k); usados.add(k + 1); }
     else if (!id && /^\d{1,6}$/.test(w) && !/^\d+\.\d+$/.test(w)) { id = w; usados.add(k); }
     else if (!id && /^[A-Za-z0-9]+_[A-Za-z0-9_]+$/.test(w)) { id = w; usados.add(k); }
   });
@@ -999,7 +1004,8 @@ function responder(texto) {
     msgChat(intro + cartaoInfracao(inf, perguntaSignif && !id ? CTX.id : CTX.id, reinc ? (+reinc[1]) - 1 : 0)); return;
   }
   // texto livre: usa o "Tirar dúvida"
-  const res = rankDuvida(t), q = new Set(toks(t).map(raiz));
+  const livre = toksT.filter((w, k) => !usados.has(k)).join(" ");
+  const res = rankDuvida(livre), q = new Set(toks(livre).filter(w => !/^\d+$/.test(w)).map(raiz));
   const extras = OUTRAS.filter(o => toks(o.palavras + " " + o.titulo).some(w => q.has(raiz(w))));
   if (!res.length && !extras.length) { msgChat(id ? `Anotei o ID <b>${esc(id)}</b>. Agora me diga o que ele fez ou a sigla (ex.: <i>vdm</i>).` : "Não entendi bem. Tente: <i>id 18 vdm</i>, <i>o que é MG</i> ou conte o que aconteceu (ex.: <i>atirou sem motivo</i>)."); return; }
   if (extras.length && (!res.length || res[0].pts <= 2)) { msgChat(extras.map(o => `<div class="chat-card" style="--c:var(--amber)"><div class="duv-top"><b>${esc(o.titulo)}</b><span>fora da tabela</span></div><p>${esc(o.texto)}</p></div>`).join("")); if (!res.length) return; }
