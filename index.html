@@ -233,6 +233,9 @@ body.bolha>*:not(#bolha){visibility:hidden}
 body.bolha{background:transparent!important;overflow:hidden}
 #bolha{position:fixed;z-index:9999;left:calc(100vw - 84px);top:40vh;width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(124,77,255,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font:700 15px var(--body);box-shadow:0 4px 18px rgba(0,0,0,.35);touch-action:none;cursor:pointer;opacity:.75}
 #bolha:active{opacity:1}
+.btn-min{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:40;width:44px;height:44px;border-radius:50%;border:1px solid var(--violet);background:rgba(124,77,255,.25);font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+body[data-aba="chat"] .btn-min,body.bolha .btn-min{display:none!important}
+@media (max-width:680px){.btn-min{bottom:calc(132px + env(safe-area-inset-bottom,0px))!important}}
 </style>
 <style>
 #instalar{font:600 14px var(--body);color:var(--fg);background:var(--accent);border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
@@ -405,6 +408,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
   </div>
 </div>
 <div id="toast" class="toast" hidden></div>
+<button type="button" id="btnMin" class="btn-min" title="Minimizar em bolha" aria-label="Minimizar em bolha">🫧</button>
 <button type="button" id="bolha" hidden aria-label="Abrir o app de novo">ADM</button>
 <button type="button" id="btnCompacto" class="btn-compacto" aria-pressed="false" title="Modo janela flutuante">🪟</button>
 <div id="gate" hidden>
@@ -688,7 +692,7 @@ body.compacto #montarLog .dica-log:first-of-type{display:none}
       <p>Toque no botão redondo <b>🪟</b> no canto de baixo para deixar só o essencial na tela (Montar comando e evidência, sem título e com letras menores). Ideal para usar na <b>janela flutuante</b> por cima do jogo. Toque de novo para voltar ao normal. O app lembra a sua escolha.</p>
 
       <h3>Virar bolha (🫧 pinça)</h3>
-      <p>Faça o movimento de <b>pinça</b> na tela (dois dedos se fechando): o app vira uma <b>bolha transparente</b> escrito ADM. Arraste a bolha para onde quiser e <b>toque nela</b> para o app voltar do jeito que estava.</p>
+      <p>Toque no botão <b>🫧</b> (acima do 🪟) ou faça uma <b>pinça</b> leve na tela (dois dedos se aproximando um pouco): o app vira uma <b>bolha transparente</b> escrito ADM. Arraste a bolha para onde quiser e <b>toque nela</b> para o app voltar do jeito que estava.</p>
 
       <h3>Deixar o app numa barrinha dentro do jogo</h3>
       <p>Primeiro instale o app (<b>📲 Baixar app Rio Rise</b>). Depois siga o passo do seu celular:</p>
@@ -2121,7 +2125,7 @@ window.addEventListener("appinstalled", () => { document.getElementById("instala
   document.addEventListener("touchstart", e => { if (e.touches.length === 2) d0 = dist(e.touches); }, { passive: true });
   document.addEventListener("touchmove", e => {
     if (e.touches.length === 2 && d0 && !document.body.classList.contains("bolha")) {
-      if (dist(e.touches) < d0 * 0.55) { d0 = 0; e.preventDefault(); virarBolha(true); }
+      const dd = dist(e.touches); if (dd < d0 * 0.8 || d0 - dd > 40) { d0 = 0; e.preventDefault(); virarBolha(true); }
     }
   }, { passive: false });
   document.addEventListener("touchend", e => { if (e.touches.length < 2) d0 = 0; }, { passive: true });
@@ -2136,6 +2140,7 @@ window.addEventListener("appinstalled", () => { document.getElementById("instala
   });
   bolha.addEventListener("pointerup", () => { if (!moveu) virarBolha(false); });
   try { if (localStorage.getItem("adm_bolha") === "1") virarBolha(true); } catch (_) {}
+  document.getElementById("btnMin").addEventListener("click", () => virarBolha(true));
   window.virarBolha = virarBolha;
 })();
 </script>
