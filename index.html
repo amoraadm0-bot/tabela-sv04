@@ -2114,14 +2114,16 @@ const btnInst = document.getElementById("instalar"), como = document.getElementB
 if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) btnInst.hidden = true;
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); pedidoInstalar = e; });
 async function instalarApp(btn, caixa) {
-  if (pedidoInstalar) { pedidoInstalar.prompt(); const r = await pedidoInstalar.userChoice; pedidoInstalar = null; if (r.outcome === "accepted") { btnInst.hidden = true; document.getElementById("instalarGate").hidden = true; } return; }
+  if (pedidoInstalar) {
+    try { pedidoInstalar.prompt(); const r = await pedidoInstalar.userChoice; pedidoInstalar = null; if (r.outcome === "accepted") { caixa.innerHTML = "✅ Instalando… Em alguns segundos o ícone <b>ADM</b> aparece na tela do celular. Se não aparecer, siga os passos abaixo."; caixa.hidden = false; return; } } catch (_) {}
+  }
   const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/i.test(ua), android = /Android/i.test(ua);
   caixa.innerHTML = ios
     ? "<b>Para baixar no iPhone:</b> abra este site no <b>Safari</b>, toque em <b>Compartilhar</b> (quadrado com seta para cima) e depois em <b>Adicionar à Tela de Início</b>."
     : android
-    ? "<b>Para baixar no Android:</b> abra este site no <b>Chrome</b>, toque nos <b>3 pontinhos ⋮</b> no canto de cima e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>. Se já tiver instalado, procure o ícone <b>ADM</b> nos seus apps."
+    ? "<b>Para baixar no Android:</b><ol style='margin:6px 0 0 18px;padding:0'><li>Abra este site no <b>Chrome</b> (não no navegador do Xiaomi).</li><li>Toque nos <b>3 pontinhos ⋮</b> no canto de cima e escolha <b>Instalar app</b>. Se só tiver <b>Adicionar à tela inicial</b>, toque nela e depois em <b>Instalar</b>.</li><li><b>Xiaomi / POCO / Redmi:</b> se tocar e nada acontecer, vá em <b>Configurações → Apps → Gerenciar apps → Chrome → Outras permissões</b> e deixe <b>Atalhos na tela inicial</b> e <b>Abrir novas janelas em segundo plano</b> como <b>Permitir</b>. Depois volte e tente de novo.</li><li>Se no menu ⋮ aparecer <b>Abrir app</b>, ele já está instalado: procure o ícone <b>ADM</b> na lista de apps.</li></ol>"
     : "<b>Para baixar no computador:</b> no Chrome, clique no ícone de instalar (tela com seta) no fim da barra de endereço, ou nos <b>3 pontinhos ⋮</b> → <b>Transmitir, salvar e compartilhar</b> → <b>Instalar página como app</b>.";
-  caixa.hidden = !caixa.hidden;
+  caixa.hidden = false; caixa.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 btnInst.addEventListener("click", () => instalarApp(btnInst, como));
 document.getElementById("instalarGate").addEventListener("click", e => instalarApp(e.currentTarget, document.getElementById("comoInstalarGate")));
