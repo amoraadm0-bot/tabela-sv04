@@ -950,7 +950,7 @@ document.getElementById("rapido").addEventListener("input", e => {
   let iInf = -1, resto = [];
   partes.forEach(p => { const i = iInf < 0 ? acharSigla(p) : -1; if (i >= 0) iInf = i; else resto.push(p); });
   if (iInf < 0) return;
-  const nk = resto.find(p => /_/.test(p) && !/^\d+$/.test(p)), idr = resto.find(p => /^#?\d{1,6}$/.test(p));
+  const idr = resto.find(p => /^#?\d{1,6}$/.test(p)), nk = resto.filter(p => p !== idr && !/^(id|nick|nome)$/i.test(p)).join(" ");
   selInf.value = String(iInf);
   if (idr) { jogador.value = idr.replace("#", ""); nickJog.value = nk || ""; } else { jogador.value = resto.join(" "); nickJog.value = ""; }
   ajustarTempo(); marcarSug(); montar();
@@ -1364,7 +1364,9 @@ function responder(texto) {
     else if (!id && /^[A-Za-z0-9]+_[A-Za-z0-9_]+$/.test(w)) { id = w; usados.add(k); }
   });
   // ID (número) vai no comando; nick (Nome_Sobrenome) vai só na evidência
-  const nickT = toksT.find((w, k) => /^[A-Za-zÀ-ÿ0-9]+_[A-Za-zÀ-ÿ0-9_]+$/.test(w) && !/^\d+$/.test(w));
+  let nickT = toksT.find((w, k) => /^[A-Za-zÀ-ÿ0-9]+_[A-Za-zÀ-ÿ0-9_]+$/.test(w) && !/^\d+$/.test(w));
+  const kNome = toksT.findIndex(w => /^nome:?$/i.test(w));
+  if (kNome >= 0 && toksT[kNome + 1]) { nickT = toksT[kNome + 1]; usados.add(kNome); usados.add(kNome + 1); }
   if (nickT && id && id !== nickT) { toksT.forEach((w, k) => { if (w === nickT) usados.add(k); }); CTX.nick = nickT; }
   else if (id) CTX.nick = "";
   if (id) CTX.id = id;
