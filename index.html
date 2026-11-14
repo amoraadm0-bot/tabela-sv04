@@ -2126,6 +2126,23 @@ document.getElementById("instalarGate").addEventListener("click", e => instalarA
 if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) document.getElementById("instalarGate").hidden = true;
 window.addEventListener("appinstalled", () => { document.getElementById("instalar").hidden = true; });
 
+
+/* 📅 Data automática: quando vira o dia, as datas que o app colocou sozinho passam para hoje */
+function atualizarDatas() {
+  const h = hoje(); let ult = null; try { ult = localStorage.getItem("adm_dia"); } catch (_) {}
+  let mudou = false;
+  ["lData", "rData", "bData"].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    const val = el.value.trim();
+    if (!val || (val !== h && (val === ult || (!ult && /^\d{2}\/\d{2}\/\d{4}$/.test(val))))) { if (val !== h) { el.value = h; mudou = true; } }
+  });
+  try { localStorage.setItem("adm_dia", h); } catch (_) {}
+  if (mudou) { try { atualizarLog(); } catch (_) {} try { atualizarRel(); } catch (_) {} try { atualizarBP(); } catch (_) {} }
+}
+setTimeout(atualizarDatas, 50);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") atualizarDatas(); });
+window.addEventListener("focus", atualizarDatas);
+setInterval(atualizarDatas, 60000);
 </script>
 </body>
 </html>
